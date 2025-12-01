@@ -186,6 +186,31 @@ class LastFmUserCrawler:
         self.artist_tags_cache[artist_name] = result
         return result
     
+
+    async def get_user_info(self, username: str) -> dict:
+        """Get user info including profile image and country"""
+        data = await self._api_call({
+            "method": "user.getInfo",
+            "user": username,
+            "api_key": self.api_key,
+            "format": "json"
+        })
+        
+        user = data.get("user", {})
+        images = user.get("image", [])
+        
+        # Get largest image (usually last in array)
+        profile_image = None
+        for img in reversed(images):
+            if img.get("#text"):
+                profile_image = img.get("#text")
+                break
+        
+        return {
+            "profile_image": profile_image,
+            "country": user.get("country")
+        }
+    
     async def get_user_profile_multi_period(self, username: str) -> dict:
         """
         Fetch complete multi-period profile for a user
@@ -207,6 +232,9 @@ class LastFmUserCrawler:
         # Recent tracks
         tasks.append(self.get_user_recent_tracks(username, limit=100))
         
+        # User info (profile image, country)
+        tasks.append(self.get_user_info(username))
+        
         # Execute ALL in parallel
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
@@ -216,6 +244,7 @@ class LastFmUserCrawler:
         artists_overall, artists_6month, artists_3month = results[0:3]
         tracks_overall, tracks_6month, tracks_3month = results[3:6]
         recent_tracks = results[6]
+        user_info = results[7] if len(results) > 7 and isinstance(results[7], dict) else {}
         
         # Get tags for top artists (also in parallel, with cache)
         top_artists = artists_overall[:10] if artists_overall else []
@@ -244,7 +273,9 @@ class LastFmUserCrawler:
                 "3month": tracks_3month
             },
             "recent_tracks": recent_tracks,
-            "artist_tags": artist_tags
+            "artist_tags": artist_tags,
+            "profile_image": user_info.get("profile_image"),
+            "country": user_info.get("country")
         }
     
     async def seed_user_directly(self, username: str) -> bool:
@@ -273,8 +304,8 @@ class LastFmUserCrawler:
                 embedding=embedding.tolist(),
                 top_artists=top_artist_names,
                 is_real=False,
-                country=None,
-                profile_image=None,
+                country=profile_data.get("country"),
+                profile_image=profile_data.get("profile_image"),
                 top_genres=top_genres
             )
             
