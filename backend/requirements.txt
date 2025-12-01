@@ -1,0 +1,34 @@
+# FastAPI and Web Server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Last.fm API
+pylast==5.2.0
+httpx==0.26.0
+
+# Machine Learning
+torch==2.1.2
+torch-geometric==2.4.0
+numpy==1.26.3
+scikit-learn==1.4.0
+
+# Vector Database
+qdrant-client==1.7.0
+
+# Redis
+redis==5.0.1
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+
+# Data Processing
+pandas==2.1.4
+
+# Utilities
+tqdm==4.66.1
+requests==2.31.0
