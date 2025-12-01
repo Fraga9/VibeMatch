@@ -97,9 +97,9 @@ export function MatchCard({ match, rank }: MatchCardProps) {
 
       {/* Action Buttons */}
       <div className="flex gap-2 mt-4">
-        {match.is_real && match.username && (
+        {match.username && (
           <a
-            href={`https://www.last.fm/user/${match.username}`}
+            href={`https://www.last.fm/user/${match.username.replace('lastfm_', '')}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 text-center px-4 py-2 bg-white/80 hover:bg-white text-gray-700 text-sm font-medium rounded-full transition-all border border-gray-200/50"

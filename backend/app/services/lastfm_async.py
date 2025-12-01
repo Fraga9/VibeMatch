@@ -65,14 +65,24 @@ class LastFMAsyncService:
 
             return data.get('user', {})
 
-    async def get_user_top_artists(self, username: str, limit: int = 50) -> List[Artist]:
-        """Get user's top artists"""
+    async def get_user_top_artists(self, username: str, limit: int = 50, period: str = 'overall') -> List[Artist]:
+        """
+        Get user's top artists for a specific time period
+
+        Args:
+            username: Last.fm username
+            limit: Number of artists to return
+            period: Time period - 'overall', '7day', '1month', '3month', '6month', '12month'
+
+        Returns:
+            List of Artist objects with playcount for that period
+        """
         params = {
             'method': 'user.getTopArtists',
             'user': username,
             'api_key': self.api_key,
             'limit': limit,
-            'period': 'overall',
+            'period': period,
             'format': 'json'
         }
 
@@ -94,14 +104,24 @@ class LastFMAsyncService:
                 for artist in top_artists
             ]
 
-    async def get_user_top_tracks(self, username: str, limit: int = 50) -> List[Track]:
-        """Get user's top tracks"""
+    async def get_user_top_tracks(self, username: str, limit: int = 50, period: str = 'overall') -> List[Track]:
+        """
+        Get user's top tracks for a specific time period
+
+        Args:
+            username: Last.fm username
+            limit: Number of tracks to return
+            period: Time period - 'overall', '7day', '1month', '3month', '6month', '12month'
+
+        Returns:
+            List of Track objects with playcount for that period
+        """
         params = {
             'method': 'user.getTopTracks',
             'user': username,
             'api_key': self.api_key,
             'limit': limit,
-            'period': 'overall',
+            'period': period,
             'format': 'json'
         }
 
@@ -162,6 +182,35 @@ class LastFMAsyncService:
                 ))
 
             return result
+
+    async def get_artist_top_tags(self, artist: str, limit: int = 5) -> List[str]:
+        """
+        Get top tags/genres for an artist from Last.fm
+
+        Args:
+            artist: Artist name
+            limit: Number of tags to return (default: 5)
+
+        Returns:
+            List of tag names (genres)
+        """
+        params = {
+            'method': 'artist.getTopTags',
+            'artist': artist,
+            'api_key': self.api_key,
+            'limit': limit,
+            'format': 'json'
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(self.base_url, params=params)
+            data = response.json()
+
+            if 'error' in data:
+                return []
+
+            tags = data.get('toptags', {}).get('tag', [])
+            return [tag.get('name', '').lower() for tag in tags if tag.get('name')]
 
     async def get_user_profile(self, username: str) -> UserProfile:
         """Get comprehensive user profile from Last.fm"""
@@ -234,6 +283,115 @@ class LastFMAsyncService:
 
         except Exception as e:
             raise Exception(f"Failed to fetch user profile: {str(e)}")
+
+    async def get_user_profile_multi_period(self, username: str) -> Dict:
+        """
+        Get comprehensive user profile with multiple time periods + artist tags
+
+        Fetches:
+        - User info
+        - Top artists for: overall, 6month, 3month (50, 50, 30 each)
+        - Top tracks for: overall, 6month, 3month (50, 50, 30 each)
+        - Recent tracks (200)
+        - Artist tags for top 10 overall artists
+
+        Returns:
+            Dict containing all profile data organized by period
+        """
+        try:
+            import asyncio
+
+            # Fetch all data in parallel (8 calls)
+            tasks = [
+                self.get_user_info(username),
+                self.get_user_top_artists(username, limit=50, period='overall'),
+                self.get_user_top_artists(username, limit=50, period='6month'),
+                self.get_user_top_artists(username, limit=30, period='3month'),
+                self.get_user_top_tracks(username, limit=50, period='overall'),
+                self.get_user_top_tracks(username, limit=50, period='6month'),
+                self.get_user_top_tracks(username, limit=30, period='3month'),
+                self.get_recent_tracks(username, limit=200)
+            ]
+
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            # Unpack results
+            user_info = results[0]
+            artists_overall = results[1] if not isinstance(results[1], Exception) else []
+            artists_6month = results[2] if not isinstance(results[2], Exception) else []
+            artists_3month = results[3] if not isinstance(results[3], Exception) else []
+            tracks_overall = results[4] if not isinstance(results[4], Exception) else []
+            tracks_6month = results[5] if not isinstance(results[5], Exception) else []
+            tracks_3month = results[6] if not isinstance(results[6], Exception) else []
+            recent_tracks = results[7] if not isinstance(results[7], Exception) else []
+
+            if isinstance(user_info, Exception):
+                raise user_info
+
+            # Fetch artist tags for top 10 artists (with rate limiting)
+            # Limit to 10 to respect API limits (~5 calls/sec = 2 seconds for 10 artists)
+            top_artist_names = [a.name for a in artists_overall[:10]]
+            artist_tags = {}
+
+            for artist_name in top_artist_names:
+                try:
+                    tags = await self.get_artist_top_tags(artist_name, limit=5)
+                    artist_tags[artist_name] = tags
+                    # Rate limiting: ~5 calls/sec = 200ms between calls
+                    await asyncio.sleep(0.2)
+                except Exception as e:
+                    print(f"Failed to fetch tags for {artist_name}: {str(e)}")
+                    artist_tags[artist_name] = []
+
+            # Extract basic info (same as before)
+            playcount = int(user_info.get('playcount', 0))
+            url = user_info.get('url', '')
+            country = user_info.get('country', '')
+            real_name = user_info.get('realname')
+
+            # Get profile image
+            images = user_info.get('image', [])
+            image = None
+            if images:
+                for img in images:
+                    if img.get('size') == 'large' and img.get('#text'):
+                        image = img['#text']
+                        break
+                if not image:
+                    for img in images:
+                        if img.get('#text'):
+                            image = img['#text']
+                            break
+
+            # Get registered timestamp
+            registered = None
+            if 'registered' in user_info:
+                registered = int(user_info['registered'].get('unixtime', 0))
+
+            return {
+                'username': username,
+                'real_name': real_name,
+                'country': country,
+                'playcount': playcount,
+                'registered': registered,
+                'url': url,
+                'image': image,
+                'artists': {
+                    'overall': artists_overall,
+                    '6month': artists_6month,
+                    '3month': artists_3month
+                },
+                'tracks': {
+                    'overall': tracks_overall,
+                    '6month': tracks_6month,
+                    '3month': tracks_3month
+                },
+                'recent_tracks': recent_tracks,
+                'artist_tags': artist_tags
+            }
+
+        except Exception as e:
+            raise Exception(f"Failed to fetch multi-period user profile: {str(e)}")
 
 
 # Singleton instance
