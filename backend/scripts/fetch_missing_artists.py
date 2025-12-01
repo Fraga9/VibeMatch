@@ -1,11 +1,11 @@
 """
 Fetch missing artists from Last.fm and prepare data for GNN retraining
 
-This script:
-1. Reads missing artists from logs/coverage
-2. Fetches their top tracks from Last.fm
-3. Creates a dataset supplement file
-4. Can be merged into FMA data for retraining
+Optimized version with:
+- Concurrent requests with semaphore
+- Connection pooling
+- Batch processing
+- Retry logic with exponential backoff
 """
 
 import asyncio
@@ -13,21 +13,78 @@ import httpx
 import json
 import pandas as pd
 from pathlib import Path
-from typing import List, Dict
-import pickle
+from typing import List, Dict, Tuple
 import os
 from dotenv import load_dotenv
+from dataclasses import dataclass, field
+import time
 
 load_dotenv()
 
-# Your Last.fm API key from env
 LASTFM_API_KEY = os.getenv("LASTFM_API_KEY")
 BASE_URL = "http://ws.audioscrobbler.com/2.0/"
+
+# Tuning parameters
+MAX_CONCURRENT_REQUESTS = 10  # Last.fm allows ~5 req/sec, we use 10 with delays
+REQUEST_TIMEOUT = 15.0
+MAX_RETRIES = 3
+RETRY_DELAY = 1.0
+
+
+@dataclass
+class FetchResult:
+    """Container for artist fetch results"""
+    tracks: List[Dict] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
+    similar: List[str] = field(default_factory=list)
+    success: bool = False
 
 
 class LastFmDataFetcher:
     def __init__(self, api_key: str):
         self.api_key = api_key
+        self.semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
+        self._client: httpx.AsyncClient | None = None
+
+    async def __aenter__(self):
+        self._client = httpx.AsyncClient(
+            timeout=REQUEST_TIMEOUT,
+            limits=httpx.Limits(max_connections=MAX_CONCURRENT_REQUESTS * 2),
+            http2=True  # Enable HTTP/2 for better performance
+        )
+        return self
+
+    async def __aexit__(self, *args):
+        if self._client:
+            await self._client.aclose()
+
+    async def _request_with_retry(self, params: Dict) -> Dict | None:
+        """Make request with retry logic and rate limiting"""
+        async with self.semaphore:
+            for attempt in range(MAX_RETRIES):
+                try:
+                    response = await self._client.get(BASE_URL, params=params)
+                    
+                    if response.status_code == 429:  # Rate limited
+                        wait_time = RETRY_DELAY * (2 ** attempt)
+                        await asyncio.sleep(wait_time)
+                        continue
+                    
+                    if response.status_code != 200 or not response.text:
+                        return None
+                    
+                    data = response.json()
+                    if 'error' in data:
+                        return None
+                    
+                    return data
+                    
+                except (httpx.TimeoutException, httpx.HTTPError):
+                    if attempt < MAX_RETRIES - 1:
+                        await asyncio.sleep(RETRY_DELAY * (2 ** attempt))
+                    continue
+            
+            return None
 
     async def get_artist_top_tracks(self, artist: str, limit: int = 50) -> List[Dict]:
         """Fetch top tracks for an artist"""
@@ -38,40 +95,21 @@ class LastFmDataFetcher:
             'limit': limit,
             'format': 'json'
         }
-
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(BASE_URL, params=params)
-                
-                if response.status_code != 200:
-                    print(f"  ❌ HTTP error {response.status_code} for {artist}")
-                    return []
-                
-                if not response.text:
-                    print(f"  ❌ Empty response for {artist}")
-                    return []
-                
-                data = response.json()
-
-                if 'error' in data:
-                    print(f"  ❌ Error fetching {artist}: {data.get('message')}")
-                    return []
-
-                tracks = data.get('toptracks', {}).get('track', [])
-
-                result = []
-                for track in tracks:
-                    result.append({
-                        'track_name': track.get('name'),
-                        'artist_name': artist,
-                        'playcount': int(track.get('playcount', 0)),
-                        'listeners': int(track.get('listeners', 0))
-                    })
-
-                return result
-        except Exception as e:
-            print(f"  ❌ Exception fetching tracks for {artist}: {e}")
+        
+        data = await self._request_with_retry(params)
+        if not data:
             return []
+        
+        tracks = data.get('toptracks', {}).get('track', [])
+        return [
+            {
+                'track_name': track.get('name'),
+                'artist_name': artist,
+                'playcount': int(track.get('playcount', 0)),
+                'listeners': int(track.get('listeners', 0))
+            }
+            for track in tracks
+        ]
 
     async def get_artist_tags(self, artist: str) -> List[str]:
         """Fetch genre tags for an artist"""
@@ -82,24 +120,13 @@ class LastFmDataFetcher:
             'limit': 10,
             'format': 'json'
         }
-
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(BASE_URL, params=params)
-                
-                if response.status_code != 200 or not response.text:
-                    return []
-                
-                data = response.json()
-
-                if 'error' in data:
-                    return []
-
-                tags = data.get('toptags', {}).get('tag', [])
-                return [tag.get('name', '').lower() for tag in tags if tag.get('name')]
-        except Exception as e:
-            print(f"  ❌ Exception fetching tags for {artist}: {e}")
+        
+        data = await self._request_with_retry(params)
+        if not data:
             return []
+        
+        tags = data.get('toptags', {}).get('tag', [])
+        return [tag.get('name', '').lower() for tag in tags if tag.get('name')]
 
     async def get_similar_artists(self, artist: str, limit: int = 10) -> List[str]:
         """Fetch similar artists"""
@@ -110,79 +137,101 @@ class LastFmDataFetcher:
             'limit': limit,
             'format': 'json'
         }
-
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(BASE_URL, params=params)
-                
-                if response.status_code != 200 or not response.text:
-                    return []
-                
-                data = response.json()
-
-                if 'error' in data:
-                    return []
-
-                similar = data.get('similarartists', {}).get('artist', [])
-                return [a.get('name') for a in similar if a.get('name')]
-        except Exception as e:
-            print(f"  ❌ Exception fetching similar artists for {artist}: {e}")
+        
+        data = await self._request_with_retry(params)
+        if not data:
             return []
+        
+        similar = data.get('similarartists', {}).get('artist', [])
+        return [a.get('name') for a in similar if a.get('name')]
+
+    async def fetch_artist_complete(self, artist: str) -> Tuple[str, FetchResult]:
+        """Fetch all data for a single artist concurrently"""
+        # Run all 3 requests in parallel
+        tracks_task = self.get_artist_top_tracks(artist)
+        tags_task = self.get_artist_tags(artist)
+        similar_task = self.get_similar_artists(artist)
+        
+        tracks, tags, similar = await asyncio.gather(
+            tracks_task, tags_task, similar_task
+        )
+        
+        result = FetchResult(
+            tracks=tracks,
+            tags=tags,
+            similar=similar,
+            success=bool(tracks or tags)
+        )
+        
+        return artist, result
 
 
-async def fetch_missing_artists_data(missing_artists: List[str], api_key: str):
-    """Fetch data for all missing artists"""
-    fetcher = LastFmDataFetcher(api_key)
-
+async def fetch_missing_artists_data(
+    missing_artists: List[str], 
+    api_key: str,
+    progress_callback=None
+) -> Tuple[List[Dict], Dict]:
+    """Fetch data for all missing artists with concurrent processing"""
+    
     all_tracks = []
     artist_info = {}
-
-    print(f"\n📥 Fetching data for {len(missing_artists)} missing artists...")
-
-    for artist in missing_artists:
-        print(f"\n🎵 Processing: {artist}")
-
-        # Fetch top tracks
-        tracks = await fetcher.get_artist_top_tracks(artist, limit=50)
-        print(f"  ✅ Found {len(tracks)} tracks")
-
-        # Fetch tags
-        tags = await fetcher.get_artist_tags(artist)
-        print(f"  ✅ Found {len(tags)} tags: {', '.join(tags[:5])}")
-
-        # Fetch similar artists
-        similar = await fetcher.get_similar_artists(artist, limit=10)
-        print(f"  ✅ Found {len(similar)} similar artists")
-
-        # Store tracks
-        all_tracks.extend(tracks)
-
-        # Store artist info
-        artist_info[artist] = {
-            'tags': tags,
-            'similar_artists': similar,
-            'track_count': len(tracks)
-        }
-
-        # Rate limiting - increased to avoid throttling
-        await asyncio.sleep(0.5)
-
+    
+    print(f"\n📥 Fetching data for {len(missing_artists)} artists...")
+    print(f"   Using {MAX_CONCURRENT_REQUESTS} concurrent connections\n")
+    
+    start_time = time.time()
+    
+    async with LastFmDataFetcher(api_key) as fetcher:
+        # Process all artists concurrently
+        tasks = [fetcher.fetch_artist_complete(artist) for artist in missing_artists]
+        
+        # Use as_completed for real-time progress
+        completed = 0
+        for coro in asyncio.as_completed(tasks):
+            artist, result = await coro
+            completed += 1
+            
+            if result.success:
+                all_tracks.extend(result.tracks)
+                artist_info[artist] = {
+                    'tags': result.tags,
+                    'similar_artists': result.similar,
+                    'track_count': len(result.tracks)
+                }
+                status = f"✅ {len(result.tracks)} tracks, {len(result.tags)} tags"
+            else:
+                status = "❌ Failed"
+            
+            # Progress bar
+            pct = (completed / len(missing_artists)) * 100
+            print(f"[{completed}/{len(missing_artists)}] {pct:5.1f}% | {artist[:30]:<30} | {status}")
+    
+    elapsed = time.time() - start_time
+    rate = len(missing_artists) / elapsed if elapsed > 0 else 0
+    
+    print(f"\n⏱️  Completed in {elapsed:.1f}s ({rate:.1f} artists/sec)")
+    
     return all_tracks, artist_info
 
 
-def save_supplement_data(tracks: List[Dict], artist_info: Dict, output_dir: str = "data/lastfm_supplement"):
+def save_supplement_data(
+    tracks: List[Dict], 
+    artist_info: Dict, 
+    output_dir: str = "data/lastfm_supplement"
+):
     """Save fetched data for later use"""
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     # Save tracks as CSV
-    df_tracks = pd.DataFrame(tracks)
-    df_tracks.to_csv(f"{output_dir}/tracks.csv", index=False)
-    print(f"\n💾 Saved {len(tracks)} tracks to {output_dir}/tracks.csv")
+    if tracks:
+        df_tracks = pd.DataFrame(tracks)
+        df_tracks.to_csv(f"{output_dir}/tracks.csv", index=False)
+        print(f"\n💾 Saved {len(tracks)} tracks")
 
     # Save artist info as JSON
     with open(f"{output_dir}/artist_info.json", "w", encoding='utf-8') as f:
         json.dump(artist_info, f, indent=2, ensure_ascii=False)
-    print(f"💾 Saved artist info to {output_dir}/artist_info.json")
+    print(f"💾 Saved {len(artist_info)} artists info")
 
     # Create summary
     summary = {
@@ -190,123 +239,97 @@ def save_supplement_data(tracks: List[Dict], artist_info: Dict, output_dir: str 
         'total_artists': len(artist_info),
         'artists': list(artist_info.keys())
     }
-
     with open(f"{output_dir}/summary.json", "w", encoding='utf-8') as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
-    print(f"💾 Saved summary to {output_dir}/summary.json")
 
 
-async def main():
-    # Top missing artists from your logs
-    missing_artists = [
-        "Kanye West",
-        "The Beach Boys",
-        "The Killers",
-        "The Cure",
-        "My Chemical Romance",
-        "Title Fight",
-        "Joji",
-        "Babasónicos",
-        "Little Jesus",
-        "Daniel Caesar",
-        "Mac DeMarco",
-        "Faye Webster",
-        "Hotel Ugly",
-        "Still Woozy",
-        "The Marías",
-        "José José",
-        "Post Malone",
-        "A Flock of Seagulls",
-        "Rojuu",
-        "Def Leppard",
-        "Soda Stereo",
-        "The Weeknd",
-        "Radiohead",
-        "Bandalos Chinos",
-        "Lana Del Rey",
-        "Cuco",
-        "Pusha T",
-        "Lorde",
-        "Charli xcx",
-        "NewJeans",
-        "Weezer",
-        "Enjambre",
-        "Pescado Rabioso",
-        "Zoé",
-        "Green Day",
-        "John Mayer",
-        "Billy Joel",
-        "Mac Miller",
-        "AKRIILA"
-    ]
-
-    print("=" * 60)
-    print("🎵 Last.fm Missing Artists Data Fetcher")
-    print("=" * 60)
-
-    # Check for existing data
-    existing_artists = set()
+def load_existing_data(output_dir: str = "data/lastfm_supplement") -> Tuple[List[Dict], Dict]:
+    """Load existing data if available"""
     existing_tracks = []
     existing_info = {}
     
-    info_path = Path("data/lastfm_supplement/artist_info.json")
-    tracks_path = Path("data/lastfm_supplement/tracks.csv")
+    info_path = Path(output_dir) / "artist_info.json"
+    tracks_path = Path(output_dir) / "tracks.csv"
     
     if info_path.exists():
         with open(info_path, "r", encoding='utf-8') as f:
             existing_info = json.load(f)
-            existing_artists = set(existing_info.keys())
-        print(f"📂 Found {len(existing_artists)} existing artists")
+        print(f"📂 Loaded {len(existing_info)} existing artists")
     
     if tracks_path.exists():
         existing_tracks = pd.read_csv(tracks_path).to_dict('records')
-        print(f"📂 Found {len(existing_tracks)} existing tracks")
+        print(f"📂 Loaded {len(existing_tracks)} existing tracks")
+    
+    return existing_tracks, existing_info
+
+
+async def main():
+    missing_artists = [
+        "Kanye West", "The Beach Boys", "The Killers", "The Cure",
+        "My Chemical Romance", "Title Fight", "Joji", "Babasónicos",
+        "Little Jesus", "Daniel Caesar", "Mac DeMarco", "Faye Webster",
+        "Hotel Ugly", "Still Woozy", "The Marías", "José José",
+        "Post Malone", "A Flock of Seagulls", "Rojuu", "Def Leppard",
+        "Soda Stereo", "The Weeknd", "Radiohead", "Bandalos Chinos",
+        "Lana Del Rey", "Cuco", "Pusha T", "Lorde", "Charli xcx",
+        "NewJeans", "Weezer", "Enjambre", "Pescado Rabioso", "Zoé",
+        "Green Day", "John Mayer", "Billy Joel", "Mac Miller",
+        "AKRIILA", "Kings of Convenience", "No Doubt", "Twenty One Pilots",
+        "Chappell Roan", "Melody's Echo Chamber", "Tito Double P",
+        "Loona", "Depeche Mode", "The Doors", "Mazzy Star",
+        "Lou Reed", "Bob Dylan", "Fugazi", "Stevie Wonder", "Mon Laferte", 
+        "Papa Topo", "*NSYNC", "Earth, Wind & Fire", "Ichiko Aoba",
+        "Talking Heads", "Saint Motel", "Nujabes", "Maroon 5", "wave to earth",
+        "Gwinn", "BROCKHAMPTON", "Rage Against the Machine", "Bobby Pulido", 
+        "Los Fabulosos Cadillacs", "Bladee", "Pavement"
+    ]
+
+    print("=" * 60)
+    print("🎵 Last.fm Missing Artists Data Fetcher (Optimized)")
+    print("=" * 60)
+
+    # Load existing data
+    existing_tracks, existing_info = load_existing_data()
+    existing_artists = set(existing_info.keys())
 
     # Filter to only new artists
     new_artists = [a for a in missing_artists if a not in existing_artists]
     
     if not new_artists:
         print("\n✅ All artists already fetched!")
-    else:
-        print(f"\n📥 Fetching {len(new_artists)} new artists (skipping {len(missing_artists) - len(new_artists)} existing)...")
-        
-        # Fetch only new data
-        tracks, artist_info = await fetch_missing_artists_data(new_artists, LASTFM_API_KEY)
-        
-        # Merge with existing
-        existing_tracks.extend(tracks)
-        existing_info.update(artist_info)
-        
-        tracks = existing_tracks
-        artist_info = existing_info
+        return
 
-    # Also fetch similar artists (to create valid edges)
-    similar_artists_to_fetch = set()
-    for artist, info in artist_info.items():
-        for similar in info.get('similar_artists', [])[:5]:  # Top 5 similar
-            if similar not in missing_artists and similar not in artist_info:
-                similar_artists_to_fetch.add(similar)
+    print(f"\n📥 {len(new_artists)} new artists to fetch")
+    print(f"⏭️  Skipping {len(missing_artists) - len(new_artists)} existing\n")
     
-    if similar_artists_to_fetch:
-        print(f"\n📥 Fetching {len(similar_artists_to_fetch)} similar artists...")
-        similar_tracks, similar_info = await fetch_missing_artists_data(
-            list(similar_artists_to_fetch), LASTFM_API_KEY
-        )
-        
-        # Merge data
-        tracks.extend(similar_tracks)
-        artist_info.update(similar_info)
+    # Fetch new data
+    tracks, artist_info = await fetch_missing_artists_data(new_artists, LASTFM_API_KEY)
+    
+    # Merge with existing
+    existing_tracks.extend(tracks)
+    existing_info.update(artist_info)
 
-    # Save data
-    save_supplement_data(tracks, artist_info)
+    # Optionally fetch similar artists
+    similar_to_fetch = set()
+    for info in artist_info.values():
+        for similar in info.get('similar_artists', [])[:10]:
+            if similar not in existing_artists and similar not in artist_info:
+                similar_to_fetch.add(similar)
+    
+    if similar_to_fetch and len(similar_to_fetch) <= 50:
+        print(f"\n📥 Fetching {len(similar_to_fetch)} similar artists...")
+        similar_tracks, similar_info = await fetch_missing_artists_data(
+            list(similar_to_fetch), LASTFM_API_KEY
+        )
+        existing_tracks.extend(similar_tracks)
+        existing_info.update(similar_info)
+
+    # Save all data
+    save_supplement_data(existing_tracks, existing_info)
 
     print("\n" + "=" * 60)
-    print("✅ Done! Data saved to data/lastfm_supplement/")
+    print("✅ Done!")
     print("=" * 60)
-    print("\nNext steps:")
-    print("1. Review the fetched data in data/lastfm_supplement/")
-    print("2. Run merge_datasets.py to combine FMA + Last.fm data")
-    print("3. Retrain the GNN model with train_gnn.ipynb")
 
 
 if __name__ == "__main__":
