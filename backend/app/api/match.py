@@ -65,7 +65,7 @@ async def get_top_matches(
             # For ghost users, we use stored metadata
             match_result = MatchResult(
                 user_id=match["user_id"] if not match["is_real"] else None,
-                username=match["username"] if match["is_real"] else None,
+                username=match.get("username"),
                 similarity=match["similarity"],
                 is_real=match["is_real"],
                 shared_artists=shared_artists[:10],

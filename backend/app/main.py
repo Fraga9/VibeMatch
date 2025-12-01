@@ -2,6 +2,44 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import auth, user, match, admin
 from app.core.config import settings
+import logging
+from pathlib import Path
+import sys
+
+# Configure logging with UTF-8 encoding
+log_dir = Path("logs")
+log_dir.mkdir(exist_ok=True)
+
+# Create handlers with UTF-8 encoding
+file_handler = logging.FileHandler(
+    log_dir / 'vibematch.log',
+    encoding='utf-8'
+)
+
+# Console handler with UTF-8 encoding (safe for Windows)
+try:
+    # Try to use UTF-8 mode for console on Windows
+    console_handler = logging.StreamHandler(
+        stream=open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1, closefd=False)
+    )
+except:
+    # Fallback: use regular StreamHandler and ignore encoding errors
+    console_handler = logging.StreamHandler()
+
+# Set formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Configure root logger
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[console_handler, file_handler]
+)
+
+# Reduce noise from dependencies
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('qdrant_client').setLevel(logging.WARNING)
 
 # Create FastAPI app
 app = FastAPI(

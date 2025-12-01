@@ -44,36 +44,39 @@ async def create_user_embedding(
     current_user: str = Depends(get_current_user)
 ):
     """
-    Generate and store user embedding in Qdrant
+    Generate and store user embedding in Qdrant (Enhanced multi-period)
 
     Steps:
-    1. Fetch user's Last.fm profile (top artists/tracks)
-    2. Generate embedding using GNN model
-    3. Store in Qdrant with metadata
-    4. Return embedding info
+    1. Fetch user's Last.fm profile across multiple time periods
+    2. Fetch genre tags for top 10 artists
+    3. Generate embedding using temporal weighting
+    4. Store in Qdrant with metadata
+    5. Return embedding info
 
     This endpoint should be called after authentication to enable matching
     """
     try:
-        # Fetch user profile from Last.fm
-        profile = await lastfm_async_service.get_user_profile(current_user)
+        # Fetch multi-period user profile from Last.fm
+        profile_data = await lastfm_async_service.get_user_profile_multi_period(current_user)
 
-        # Generate embedding from profile
-        embedding = embedding_service.generate_user_embedding(profile)
+        # Generate embedding from multi-period profile
+        embedding = embedding_service.generate_user_embedding_temporal(profile_data)
 
-        # Infer genres from top artists
-        top_genres = embedding_service.infer_genres_from_artists(
-            [a.name for a in profile.top_artists[:20]]
+        # Infer genres from Last.fm tags
+        top_artist_names = [a.name for a in profile_data['artists']['overall'][:10]]
+        top_genres = embedding_service.infer_genres_from_tags(
+            profile_data.get('artist_tags', {}),
+            top_artist_names
         )
 
         # Store in Qdrant
         user_id = qdrant_service.add_user_embedding(
             username=current_user,
             embedding=embedding.tolist(),
-            top_artists=[a.name for a in profile.top_artists[:10]],
+            top_artists=top_artist_names,
             is_real=True,
-            country=profile.country,
-            profile_image=profile.image,
+            country=profile_data.get('country'),
+            profile_image=profile_data.get('image'),
             top_genres=top_genres
         )
 
@@ -81,7 +84,7 @@ async def create_user_embedding(
             user_id=user_id,
             username=current_user,
             embedding_dim=len(embedding),
-            top_artists=[a.name for a in profile.top_artists[:10]],
+            top_artists=top_artist_names,
             created_at=datetime.utcnow()
         )
 
