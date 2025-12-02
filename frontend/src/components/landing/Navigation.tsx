@@ -4,9 +4,10 @@ import { Music } from 'lucide-react';
 
 interface NavigationProps {
   onHowItWorksClick: () => void;
+  onAboutClick: () => void;
 }
 
-export default function Navigation({ onHowItWorksClick }: NavigationProps) {
+export default function Navigation({ onHowItWorksClick, onAboutClick }: NavigationProps) {
   return (
     <nav style={{
       display: 'flex',
@@ -38,7 +39,7 @@ export default function Navigation({ onHowItWorksClick }: NavigationProps) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <button onClick={onHowItWorksClick} className="nav-link">How it Works</button>
-        <a href="#" className="nav-link">About</a>
+        <button onClick={onAboutClick} className="nav-link">About</button>
       </div>
     </nav>
   );

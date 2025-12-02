@@ -6,12 +6,13 @@ import {
   Navigation,
   HeroSection,
   HowItWorks,
-  Footer
+  AboutSection
 } from '@/components/landing';
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
   const howItWorksRef = useRef<HTMLElement>(null);
+  const aboutRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -19,6 +20,10 @@ export default function LandingPage() {
 
   const scrollToHowItWorks = () => {
     howItWorksRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const scrollToAbout = () => {
+    aboutRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   if (!mounted) return null;
@@ -429,10 +434,13 @@ export default function LandingPage() {
       <BackgroundEffects />
 
       <div style={{ position: 'relative', zIndex: 10 }}>
-        <Navigation onHowItWorksClick={scrollToHowItWorks} />
+        <Navigation 
+          onHowItWorksClick={scrollToHowItWorks} 
+          onAboutClick={scrollToAbout}
+        />
         <HeroSection onScrollToHowItWorks={scrollToHowItWorks} />
         <HowItWorks ref={howItWorksRef} />
-        <Footer />
+        <AboutSection ref={aboutRef} />
       </div>
     </>
   );
