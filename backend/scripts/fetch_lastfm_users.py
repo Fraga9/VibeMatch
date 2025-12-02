@@ -2,7 +2,7 @@
 Fetch Last.fm users via social graph traversal (BFS) and seed them directly
 
 Usage:
-    python fetch_lastfm_users.py --seed-user "rj" --max-users 500
+    python fetch_lastfm_users.py --seed-user "Fraga9" --max-users 250
     python fetch_lastfm_users.py --seed-user "rj" --max-users 500 --concurrent 5
 """
 

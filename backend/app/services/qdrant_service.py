@@ -48,6 +48,9 @@ class QdrantService:
     ) -> str:
         """Add or update user embedding in Qdrant"""
         try:
+            # IMPORTANT: Last.fm usernames are case-insensitive, normalize to lowercase
+            username = username.lower().strip()
+
             # Check if user already exists
             existing_user = self.get_user_by_username(username)
 
@@ -131,8 +134,11 @@ class QdrantService:
             raise Exception(f"Failed to find similar users: {str(e)}")
 
     def get_user_by_username(self, username: str) -> Optional[Dict]:
-        """Get user by username"""
+        """Get user by username (case-insensitive)"""
         try:
+            # IMPORTANT: Last.fm usernames are case-insensitive, normalize to lowercase
+            username = username.lower().strip()
+
             search_result = self.client.scroll(
                 collection_name=self.collection_name,
                 scroll_filter=Filter(
@@ -225,7 +231,7 @@ class QdrantService:
             return 0
 
     def clean_duplicate_users(self):
-        """Remove duplicate users keeping only the most recent one"""
+        """Remove duplicate users keeping only the most recent one (case-insensitive)"""
         try:
             # Get all users
             scroll_result = self.client.scroll(
@@ -234,22 +240,25 @@ class QdrantService:
                 with_payload=True
             )
 
-            # Group by username
+            # Group by normalized username (case-insensitive)
             from collections import defaultdict
             users_by_username = defaultdict(list)
 
             for point in scroll_result[0]:
                 username = point.payload.get("username")
                 if username:
-                    users_by_username[username].append({
+                    # Normalize username for comparison
+                    normalized_username = username.lower().strip()
+                    users_by_username[normalized_username].append({
                         "id": str(point.id),
+                        "original_username": username,
                         "created_at": point.payload.get("created_at"),
                         "updated_at": point.payload.get("updated_at")
                     })
 
             # Find duplicates and keep most recent
             ids_to_delete = []
-            for username, user_list in users_by_username.items():
+            for normalized_username, user_list in users_by_username.items():
                 if len(user_list) > 1:
                     # Sort by updated_at or created_at (most recent first)
                     sorted_users = sorted(
@@ -260,7 +269,9 @@ class QdrantService:
                     # Keep the first (most recent), delete the rest
                     for user in sorted_users[1:]:
                         ids_to_delete.append(user["id"])
-                    print(f"Found {len(sorted_users)} duplicates for user '{username}', keeping most recent")
+
+                    original_names = [u["original_username"] for u in user_list]
+                    print(f"Found {len(sorted_users)} duplicates for user '{normalized_username}' (variants: {original_names}), keeping most recent")
 
             # Delete duplicates
             if ids_to_delete:
