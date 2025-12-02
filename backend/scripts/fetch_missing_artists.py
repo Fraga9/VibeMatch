@@ -281,7 +281,54 @@ async def main():
         "Papa Topo", "*NSYNC", "Earth, Wind & Fire", "Ichiko Aoba",
         "Talking Heads", "Saint Motel", "Nujabes", "Maroon 5", "wave to earth",
         "Gwinn", "BROCKHAMPTON", "Rage Against the Machine", "Bobby Pulido", 
-        "Los Fabulosos Cadillacs", "Bladee", "Pavement"
+        "Los Fabulosos Cadillacs", "Bladee", "Pavement",
+        "Panchiko", "Matt Maltese", "Playboi Carti", "Sunlid", "The Smiths",
+        "Queen", "she's green", "Rod Stewart", "Red Hot Chili Peppers", "Fishmans",
+        "The Parcels", "ABBA", "Maria Daniela Y Su Sonido Lasser", 
+        "Surfistas del Sistema", "Cariño", "Jorge Drexler", "Daft Punk",
+        "Cupido", "Lewis OfMan", "Saja Boys", "Cro-Magnon", "Gorillaz",
+        "Laufey", "LJONES", "Yeat", "Foster the People", "Bruno Mars", "Chezile",
+        "Tan Bionica", "Cameron Winter", "MF DOOM", "The Notorious B.I.G.",
+        "HOME MADE 家族", "Baby Keem", "Rex Orange County", "BABYMETAL",
+        "DANGERDOOM", "Chavo", "Lil Yachty", "Joost", "Lin-Manuel Miranda",
+        "tarowo", "Leslie Odom Jr.", "Kali Uchis", "缺省", "U2", "Fleetwood Mac", "Duran Duran", "Alvvays", "ataquemos",
+        "Niños del Cerro", "Jalen Ngonda", "montegrande", "Patio Solar", "Toto",
+        "LSD and the Search for God", "Junior H", "Él mató a un policía motorizado",
+        "Michael Jackson", "Metronomy", "Paco Amoroso", "The Beatles", "Pink Floyd",
+        "Ca7riel & Paco Amoroso", "Deftones", "HUNTR/X", "Polo & Pan",
+        "Belle and Sebastian", "Joaquim Roberto Braga", "高中正義", "Slipknot",
+        "Chano", "wifiskeleton", "Las Ligas Menores", "Foo Fighters", "Madvillain",
+        "Jordan Ward", "Whirr", "Não Ao Futebol Moderno", "Natanael Cano", "Justice",
+        "RSP", "Sabino", "MINMI", "Korn", "Axolotes Mexicanos", "Kiddie Gang",
+        "Metric", "Björk", "Circus' End", "Sing-Sing", "cacomixtle", "f(x)",
+        "Duster", "Mannequin Pussy", "Princess Chelsea", "Angel Castillo Cas",
+        "Linda Perhacs", "A.R. Kane", "Dean Blunt", "Dave Bixby",
+        "Cleaners From Venus", "PASTEL GHOST", "Playa Gótica", "Astrid Sonne",
+        "Belanova", "America", "Oasis", "Hall & Oates", "asia menor", "Loathe", 
+        "David Bowie", "Javiera Mena", "Palacio Infantil", "Amantes Del Futuro",
+        "Silvana Estrada", "Mint Field", "Jimmy Eat World", "Pom Pom Squad", 
+        "mia.u", "Christopher Bear", "Foxtails", "The Microphones",
+        "Air Miami", "elaiyah", "diciembre de 2001", "centenario", "Nina Suárez",
+        "Aphex Twin", "Héctor Lavoe", "Deerhunter", "Estrella",
+        "Adobes Buenos", "Jasiel Núñez", "ALAMBRE DE PÚAS", "2003 Toyota Corolla",
+        "Alex G", "Secret Potion", "Crystal Castles", "Car Seat Headrest", 
+        "Enrique Bunbury", "Santa Sabina", "Swirlies", "tricot", "ミドリ", "La Lá", "Cap'n Jazz",
+        "Yves", "Bleary Eyed", "Lord Snow", "Autolux",
+        "Sleeping With Sirens", "Pearl Jam", "Death Grips", "Beach House",
+        "The Flaming Lips", "Slint", "Los Hermanos", "Nine Inch Nails",
+        "Sunny Day Real Estate", "Alexisonfire",
+        "Novo Amor", "Lost Frequencies", "Linkin Park", "Evanescence",
+        "Busted", "Whitney Houston", "George Michael", "Everything But the Girl",
+        "Boston",
+        "desert sand feels warm at night", "Arnold Schoenberg", "George Clanton",
+        "Park Young-goo", "Sonic Youth", "Hong Kong Express", "澄空時間",
+        "Bob Hocko", "Fornax Void",
+        "Los Estómagos", "C418", "3Pecados", "Frank Zappa", "Riki Musso",
+        "Travesía", "The Zombies", "Gentle Giant", "Claude Debussy",
+        "t e l e p a t h テレパシー能力者", "Lady Gaga", "Social Distortion",
+        "Calvin Harris", "Will Graefe", "Dua Lipa", "Porcupine Tree", "Suéter",
+        "Seatbelts", "Brave Little Abacus", "Kultivator", "Jonathan Geer",
+        "Roedelius", "川村ゆみ"
     ]
 
     print("=" * 60)
@@ -312,14 +359,16 @@ async def main():
     # Optionally fetch similar artists
     similar_to_fetch = set()
     for info in artist_info.values():
-        for similar in info.get('similar_artists', [])[:10]:
+        for similar in info.get('similar_artists', [])[:50]: 
             if similar not in existing_artists and similar not in artist_info:
                 similar_to_fetch.add(similar)
     
-    if similar_to_fetch and len(similar_to_fetch) <= 50:
-        print(f"\n📥 Fetching {len(similar_to_fetch)} similar artists...")
+    if similar_to_fetch:
+        # Limit to first 1500 if too many
+        similar_list = list(similar_to_fetch)[:1500]
+        print(f"\n📥 Fetching {len(similar_list)} similar artists (from {len(similar_to_fetch)} total)...")
         similar_tracks, similar_info = await fetch_missing_artists_data(
-            list(similar_to_fetch), LASTFM_API_KEY
+            similar_list, LASTFM_API_KEY
         )
         existing_tracks.extend(similar_tracks)
         existing_info.update(similar_info)

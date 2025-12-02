@@ -24,6 +24,9 @@ async def authenticate_lastfm(auth_request: LastFMAuthRequest):
         # Exchange token for session key and get username
         session_key, username = await lastfm_service.get_session_key(auth_request.token)
 
+        # IMPORTANT: Last.fm usernames are case-insensitive, normalize to lowercase
+        username = username.lower().strip()
+
         # Create JWT token
         access_token = create_access_token(
             data={"sub": username, "session_key": session_key},
@@ -73,6 +76,9 @@ async def simple_authenticate(username: str):
         JWT token for accessing the API
     """
     try:
+        # IMPORTANT: Last.fm usernames are case-insensitive, normalize to lowercase
+        username = username.lower().strip()
+
         # Verify user exists on Last.fm by fetching their basic info
         user_info = await lastfm_async_service.get_user_info(username)
 

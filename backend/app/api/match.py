@@ -59,7 +59,8 @@ async def get_top_matches(
             shared_artists = list(user_top_artists.intersection(match_artists))
 
             # Calculate compatibility score (0-100)
-            compatibility = int(match["similarity"] * 100)
+            # Cosine similarity can be in range [-1, 1], clamp to [0, 1] then scale to 0-100
+            compatibility = max(0, min(100, int(match["similarity"] * 100)))
 
             # For real users, we could fetch more details
             # For ghost users, we use stored metadata

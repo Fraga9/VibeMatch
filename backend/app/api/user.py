@@ -29,6 +29,9 @@ async def get_user_profile(
     - Recent scrobbles
     """
     try:
+        # IMPORTANT: Last.fm usernames are case-insensitive, normalize to lowercase
+        username = username.lower().strip()
+
         profile = await lastfm_async_service.get_user_profile(username)
         return profile
 
