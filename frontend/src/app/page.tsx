@@ -1,215 +1,439 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowRight, Music, Headphones, Users, Zap, Loader2, AlertCircle } from 'lucide-react';
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { useEffect, useState, useRef } from 'react';
+import {
+  BackgroundEffects,
+  Navigation,
+  HeroSection,
+  HowItWorks,
+  Footer
+} from '@/components/landing';
 
 export default function LandingPage() {
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [username, setUsername] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const howItWorksRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      // Simple authentication with username only
-      const response = await axios.post(`${API_URL}/auth/simple?username=${username}`);
-
-      const { access_token } = response.data;
-
-      // Store token and username
-      localStorage.setItem('vibematch_token', access_token);
-      localStorage.setItem('vibematch_username', username);
-
-      // Create user embedding
-      await axios.post(
-        `${API_URL}/user/embedding`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${access_token}`
-          }
-        }
-      );
-
-      // Redirect to dashboard
-      router.push('/dashboard');
-
-    } catch (err: any) {
-      console.error('Login error:', err);
-
-      if (err.response?.status === 404) {
-        setError(`User "${username}" not found on Last.fm. Please check the username.`);
-      } else if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
-      } else {
-        setError('Failed to login. Please try again.');
-      }
-      setLoading(false);
-    }
+  const scrollToHowItWorks = () => {
+    howItWorksRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] relative overflow-hidden">
-      {/* Background Blur Orbs */}
-      <div className="blur-orb w-[600px] h-[600px] bg-cyan-400/30 -top-40 -right-40 animate-float" />
-      <div className="blur-orb w-[500px] h-[500px] bg-blue-400/25 top-1/2 -left-60 animate-float-delayed" />
-      <div className="blur-orb w-[400px] h-[400px] bg-teal-300/20 bottom-20 right-1/4 animate-float" />
+    <>
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap');
 
-      {/* Main Container - Full Screen */}
-      <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Navigation */}
-        <nav className="flex items-center justify-between px-8 md:px-16 lg:px-24 py-6">
-          <div className="flex items-center gap-3">
-            <img
-              src="/VibeMatch.svg"
-              alt="VibeMatch Logo"
-              className="h-10 w-auto"
-              style={{ filter: 'invert(39%) sepia(90%) saturate(1842%) hue-rotate(196deg) brightness(102%) contrast(101%)' }}
-            />
-          </div>
+        :root {
+          --color-bg: #050a0e;
+          --color-bg-secondary: #0a1218;
+          --color-surface: rgba(56, 189, 248, 0.03);
+          --color-surface-elevated: rgba(56, 189, 248, 0.06);
+          --color-border: rgba(56, 189, 248, 0.1);
+          --color-text: #e8f4f8;
+          --color-text-muted: rgba(232, 244, 248, 0.5);
+          --color-accent: #38bdf8;
+          --color-accent-secondary: #06b6d4;
+          --color-accent-tertiary: #22d3ee;
+          --color-ice: #7dd3fc;
+          --color-frost: #bae6fd;
+          --font-display: 'Instrument Serif', Georgia, serif;
+          --font-body: 'Outfit', -apple-system, sans-serif;
+        }
 
-          <div className="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-            <button className="nav-pill">Home</button>
-            <button className="nav-pill">How it Works</button>
-            <button className="nav-pill">About</button>
-          </div>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
 
-          {/* Spacer para mantener el logo a la izquierda */}
-          <div className="hidden md:block w-[120px]"></div>
-        </nav>
+        html {
+          scroll-behavior: smooth;
+        }
 
-        {/* Hero Content - Full Width */}
-        <main className="flex-1 flex items-center px-8 md:px-16 lg:px-24 py-12">
-          <div className="w-full max-w-3xl">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 text-blue-600 text-sm font-medium mb-8">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-              1,337 people found their match today
-            </div>
+        body {
+          font-family: var(--font-body);
+          background: var(--color-bg);
+          color: var(--color-text);
+          overflow-x: hidden;
+        }
 
-            {/* Headline */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-8 text-gray-900">
-              Find your{' '}
-              <span className="text-gradient-ios italic">music</span>
-              <br />
-              soulmate
-            </h1>
+        .hero-gradient {
+          position: fixed;
+          inset: 0;
+          background: 
+            radial-gradient(ellipse 80% 50% at 20% 40%, rgba(56, 189, 248, 0.12) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 40% at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+            radial-gradient(ellipse 50% 30% at 50% 80%, rgba(34, 211, 238, 0.08) 0%, transparent 50%),
+            linear-gradient(180deg, #050a0e 0%, #0a1218 100%);
+          z-index: 0;
+        }
 
-            {/* Description */}
-            <p className="text-gray-500 text-lg md:text-xl leading-relaxed mb-10 max-w-xl">
-              Connect through the music you love. Our AI analyzes your taste
-              and matches you with people who share your exact vibe.
-            </p>
+        .orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(100px);
+          opacity: 0.5;
+          animation: float 25s ease-in-out infinite;
+        }
 
-            {/* Login Form */}
-            <form onSubmit={handleSubmit} className="max-w-md">
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Your Last.fm username"
-                    disabled={loading}
-                    className="w-full px-5 py-3.5 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a84ff] focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading || !username.trim()}
-                  className="btn-primary flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="hidden sm:inline">Analyzing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Get Started</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
+        .orb-1 {
+          width: 600px;
+          height: 600px;
+          background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+          top: -250px;
+          right: -150px;
+        }
 
-              {/* Error Message */}
-              {error && (
-                <div className="mt-3 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
-                  <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-red-700 text-sm">{error}</p>
-                </div>
-              )}
+        .orb-2 {
+          width: 500px;
+          height: 500px;
+          background: linear-gradient(135deg, #22d3ee 0%, #38bdf8 100%);
+          bottom: -200px;
+          left: -150px;
+          animation-delay: -8s;
+        }
 
-              {/* Hint */}
-              <p className="mt-3 text-gray-400 text-sm">
-                Don't have a Last.fm account?{' '}
-                <a
-                  href="https://www.last.fm/join"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#0a84ff] hover:underline"
-                >
-                  Create one here
-                </a>
-              </p>
-            </form>
-          </div>
+        .orb-3 {
+          width: 350px;
+          height: 350px;
+          background: linear-gradient(135deg, #7dd3fc 0%, #0ea5e9 100%);
+          top: 40%;
+          left: 40%;
+          transform: translate(-50%, -50%);
+          animation-delay: -16s;
+          opacity: 0.25;
+        }
 
-          {/* Decorative element - right side */}
-          <div className="hidden lg:flex absolute right-24 top-1/2 -translate-y-1/2">
-            <div className="relative">
-              {/* Pulsing circles decoration */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-44 h-44 rounded-full bg-gradient-to-br from-[#0a84ff]/10 to-cyan-400/10 animate-pulse-slow" />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-64 h-64 rounded-full border border-[#0a84ff]/10 animate-pulse-slow" style={{ animationDelay: '-1s' }} />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-80 h-80 rounded-full border border-cyan-400/5 animate-pulse-slow" style={{ animationDelay: '-2s' }} />
-              </div>
+        @keyframes float {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25% { transform: translate(40px, -40px) scale(1.05); }
+          50% { transform: translate(-30px, 30px) scale(0.95); }
+          75% { transform: translate(30px, 40px) scale(1.02); }
+        }
 
-              {/* Center icon */}
-              <div className="relative w-24 h-24 rounded-2xl bg-[#0a84ff] flex items-center justify-center shadow-xl shadow-blue-500/25">
-                <Music className="w-12 h-12 text-white" />
-              </div>
-            </div>
-          </div>
-        </main>
+        .noise {
+          position: fixed;
+          inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+          opacity: 0.025;
+          pointer-events: none;
+          z-index: 1;
+        }
 
+        .glass-card {
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(6, 182, 212, 0.03) 100%);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(56, 189, 248, 0.12);
+          border-radius: 24px;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        {/* Footer */}
-        <footer className="px-8 md:px-16 lg:px-24 py-6">
-          <p className="text-sm text-gray-400">
-            © 2025 VibeMatch · Made by{' '}
-            <a
-              href="https://www.last.fm/es/user/Fraga9"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#0a84ff] hover:underline"
-            >
-              Fraga9
-            </a>
-          </p>
-        </footer>
+        .glass-card:hover {
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(6, 182, 212, 0.05) 100%);
+          border-color: rgba(56, 189, 248, 0.2);
+          transform: translateY(-4px);
+        }
+
+        .headline {
+          font-family: var(--font-display);
+          font-size: clamp(3.5rem, 10vw, 7rem);
+          font-weight: 400;
+          line-height: 1.05;
+          letter-spacing: -0.02em;
+        }
+
+        .headline-italic {
+          font-style: italic;
+          background: linear-gradient(135deg, #38bdf8 0%, #22d3ee 50%, #7dd3fc 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .nav-link {
+          font-family: var(--font-body);
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--color-text-muted);
+          padding: 0.5rem 1rem;
+          border-radius: 100px;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          cursor: pointer;
+          background: transparent;
+          border: none;
+        }
+
+        .nav-link:hover {
+          color: var(--color-text);
+          background: rgba(56, 189, 248, 0.08);
+        }
+
+        .btn-primary {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 1rem 1.75rem;
+          font-family: var(--font-body);
+          font-size: 0.9375rem;
+          font-weight: 500;
+          color: #050a0e;
+          background: linear-gradient(135deg, #38bdf8 0%, #22d3ee 100%);
+          border: none;
+          border-radius: 100px;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2), 0 8px 32px -8px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3), 0 12px 40px -8px rgba(56, 189, 248, 0.5);
+        }
+
+        .btn-primary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .input-field {
+          flex: 1;
+          padding: 1rem 1.5rem;
+          font-family: var(--font-body);
+          font-size: 0.9375rem;
+          color: var(--color-text);
+          background: rgba(56, 189, 248, 0.05);
+          border: 1px solid rgba(56, 189, 248, 0.12);
+          border-radius: 100px;
+          outline: none;
+          transition: all 0.3s ease;
+        }
+
+        .input-field::placeholder { color: var(--color-text-muted); }
+        .input-field:focus {
+          background: rgba(56, 189, 248, 0.08);
+          border-color: rgba(56, 189, 248, 0.4);
+          box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
+        }
+        .input-field:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .stat-number {
+          font-family: var(--font-display);
+          font-size: 2.5rem;
+          font-weight: 400;
+          background: linear-gradient(135deg, #38bdf8 0%, #7dd3fc 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .audio-wave { display: flex; align-items: center; gap: 3px; height: 24px; }
+        .audio-bar {
+          width: 3px;
+          background: linear-gradient(180deg, #38bdf8 0%, #06b6d4 100%);
+          border-radius: 2px;
+          animation: audioWave 1s ease-in-out infinite;
+        }
+        .audio-bar:nth-child(1) { animation-delay: 0s; }
+        .audio-bar:nth-child(2) { animation-delay: 0.1s; }
+        .audio-bar:nth-child(3) { animation-delay: 0.2s; }
+        .audio-bar:nth-child(4) { animation-delay: 0.3s; }
+        .audio-bar:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes audioWave {
+          0%, 100% { height: 8px; }
+          50% { height: 24px; }
+        }
+
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          font-size: 0.8125rem;
+          font-weight: 500;
+          color: var(--color-accent);
+          background: rgba(56, 189, 248, 0.1);
+          border: 1px solid rgba(56, 189, 248, 0.15);
+          border-radius: 100px;
+        }
+
+        .error-box {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.75rem;
+          padding: 1rem;
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          border-radius: 16px;
+          margin-top: 1rem;
+        }
+        .error-text { font-size: 0.875rem; color: #fca5a5; }
+
+        .link {
+          color: var(--color-accent);
+          text-decoration: none;
+          transition: opacity 0.2s ease;
+        }
+        .link:hover { opacity: 0.8; }
+
+        .match-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 2px solid var(--color-bg);
+          margin-left: -8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .match-avatar:first-child { margin-left: 0; }
+
+        .pulse-dot {
+          width: 8px;
+          height: 8px;
+          background: #22c55e;
+          border-radius: 50%;
+          animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .float-card { animation: floatCard 6s ease-in-out infinite; }
+        .float-card-delayed { animation: floatCard 6s ease-in-out infinite; animation-delay: -3s; }
+        @keyframes floatCard {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-12px); }
+        }
+
+        .section-title {
+          font-family: var(--font-display);
+          font-size: clamp(2.5rem, 6vw, 4rem);
+          font-weight: 400;
+          text-align: center;
+          margin-bottom: 1rem;
+        }
+
+        .step-card {
+          position: relative;
+          padding: 2rem;
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(6, 182, 212, 0.02) 100%);
+          border: 1px solid rgba(56, 189, 248, 0.1);
+          border-radius: 24px;
+          transition: all 0.4s ease;
+        }
+        .step-card:hover {
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(6, 182, 212, 0.04) 100%);
+          border-color: rgba(56, 189, 248, 0.2);
+          transform: translateY(-4px);
+        }
+
+        .step-number {
+          position: absolute;
+          top: -12px;
+          left: 24px;
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          font-style: italic;
+          color: var(--color-accent);
+          background: var(--color-bg);
+          padding: 0 0.75rem;
+        }
+
+        .step-icon {
+          width: 56px;
+          height: 56px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.25rem;
+        }
+
+        .step-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; }
+        .step-description { font-size: 0.9375rem; color: var(--color-text-muted); line-height: 1.6; }
+
+        .gnn-visual { position: relative; width: 100%; max-width: 500px; height: 300px; margin: 0 auto; }
+        .gnn-node {
+          position: absolute;
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.75rem;
+          font-weight: 600;
+          animation: nodeFloat 4s ease-in-out infinite;
+        }
+        .gnn-node-user {
+          background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+          color: #050a0e;
+          width: 64px;
+          height: 64px;
+          font-size: 0.875rem;
+          z-index: 10;
+          box-shadow: 0 0 40px rgba(56, 189, 248, 0.4);
+        }
+        .gnn-node-track {
+          background: rgba(34, 211, 238, 0.2);
+          border: 1px solid rgba(34, 211, 238, 0.3);
+          color: var(--color-frost);
+        }
+        .gnn-node-artist {
+          background: rgba(125, 211, 252, 0.2);
+          border: 1px solid rgba(125, 211, 252, 0.3);
+          color: var(--color-frost);
+        }
+        @keyframes nodeFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
+
+        .embedding-bar {
+          height: 4px;
+          border-radius: 2px;
+          background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-tertiary) 100%);
+          animation: embedPulse 2s ease-in-out infinite;
+        }
+        @keyframes embedPulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
+
+        .scroll-indicator { animation: bounce 2s ease-in-out infinite; }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(8px); }
+        }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+          .headline { font-size: clamp(2.5rem, 12vw, 4rem); }
+          .gnn-visual { height: 220px; }
+          .gnn-node { width: 36px; height: 36px; font-size: 0.625rem; }
+          .gnn-node-user { width: 48px; height: 48px; }
+        }
+      `}</style>
+
+      <BackgroundEffects />
+
+      <div style={{ position: 'relative', zIndex: 10 }}>
+        <Navigation onHowItWorksClick={scrollToHowItWorks} />
+        <HeroSection onScrollToHowItWorks={scrollToHowItWorks} />
+        <HowItWorks ref={howItWorksRef} />
+        <Footer />
       </div>
-    </div>
+    </>
   );
 }
