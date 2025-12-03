@@ -6,11 +6,12 @@ import { useStore } from '@/lib/store';
 import { getTopMatches, getMatchingStats, getUserProfile } from '@/lib/api';
 import { MatchCard } from '@/components/MatchCard';
 import { 
-  Music, LogOut, Loader2, Users, Sparkles, 
+  LogOut, Loader2, Users, Sparkles, 
   MapPin, Calendar, Activity, Disc3, 
   ExternalLink, Clock, TrendingUp, Play, Heart,
   BarChart2, Headphones, Radio
 } from 'lucide-react';
+import Image from 'next/image';
 import { formatNumber } from '@/lib/utils';
 
 interface ExtendedTrack {
@@ -280,12 +281,13 @@ export default function DashboardPage() {
           }}>
             <a href="/" className="flex items-center gap-3 group">
               <div className="relative">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105" style={{
-                  background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
-                  boxShadow: '0 4px 20px rgba(14, 165, 233, 0.3)'
-                }}>
-                  <Music size={20} color="#050a0e" strokeWidth={2.5} />
-                </div>
+                <Image
+                  src="/vibes.svg"
+                  alt="VibeMatch Logo"
+                  width={40}
+                  height={40}
+                  className="rounded-xl transition-transform group-hover:scale-105"
+                />
               </div>
               <span className="text-xl font-medium" style={{ fontFamily: 'var(--font-display)' }}>VibeMatch</span>
             </a>
@@ -565,17 +567,46 @@ export default function DashboardPage() {
                   }}>All Time</span>
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {user?.top_tracks?.slice(0, 5).map((track, idx) => (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       className="flex items-center gap-3 p-2.5 rounded-xl track-row"
                     >
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0" style={{
-                        background: idx < 3 ? 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)' : 'rgba(14, 165, 233, 0.1)',
-                        color: idx < 3 ? '#050a0e' : 'rgba(232, 244, 248, 0.4)'
+                      <div className="relative w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden" style={{
+                        background: 'rgba(14, 165, 233, 0.1)',
+                        border: '1px solid rgba(14, 165, 233, 0.15)'
                       }}>
-                        {idx + 1}
+                        {track.image ? (
+                          <>
+                            <img src={track.image} className="w-full h-full object-cover" alt={track.name} />
+                            {/* Ranking badge in corner */}
+                            <div className="absolute top-1 left-1 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold" style={{
+                              background: idx < 3
+                                ? 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
+                                : 'rgba(5, 10, 14, 0.85)',
+                              color: idx < 3 ? '#050a0e' : '#38bdf8',
+                              backdropFilter: 'blur(8px)',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                            }}>
+                              {idx + 1}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-full h-full flex items-center justify-center" style={{
+                              background: idx < 3 ? 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)' : 'rgba(14, 165, 233, 0.1)'
+                            }}>
+                              <Disc3 className="w-5 h-5" style={{ color: 'rgba(232, 244, 248, 0.3)' }} />
+                            </div>
+                            <div className="absolute top-1 left-1 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold" style={{
+                              background: idx < 3 ? 'rgba(5, 10, 14, 0.85)' : 'rgba(14, 165, 233, 0.3)',
+                              color: idx < 3 ? '#38bdf8' : 'rgba(232, 244, 248, 0.5)'
+                            }}>
+                              {idx + 1}
+                            </div>
+                          </>
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold truncate" style={{ color: '#e8f4f8' }}>{track.name}</p>
