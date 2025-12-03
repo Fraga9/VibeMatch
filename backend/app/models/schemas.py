@@ -31,12 +31,14 @@ class Track(BaseModel):
     artist: str
     playcount: int
     mbid: Optional[str] = None
+    image: Optional[str] = None
 
 
 class RecentTrack(BaseModel):
     name: str
     artist: str
     album: Optional[str] = None
+    image: Optional[str] = None
     timestamp: Optional[int] = None
     nowplaying: bool = False
 
