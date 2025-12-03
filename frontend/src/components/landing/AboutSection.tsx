@@ -14,8 +14,8 @@ const AboutSection = forwardRef<HTMLElement>((_, ref) => {
   const socialLinks = [
     { icon: Music, label: 'Last.fm', href: 'https://www.last.fm/es/user/Fraga9', username: 'Fraga9' },
     { icon: Github, label: 'GitHub', href: 'https://github.com/Fraga9', username: 'Fraga9' },
-    { icon: Linkedin, label: 'LinkedIn', href: 'https://linkedin.com/in/yourprofile', username: 'Connect' },
-    { icon: Mail, label: 'Email', href: 'mailto:your@email.com', username: 'Contact' },
+    { icon: Linkedin, label: 'LinkedIn', href: 'https://linkedin.com/in/osifraga', username: 'Connect' },
+    { icon: Mail, label: 'Email', href: 'mailto:garzahector1013@gmail.com', username: 'Contact' },
   ];
 
   return (
@@ -66,18 +66,17 @@ const AboutSection = forwardRef<HTMLElement>((_, ref) => {
         {/* Creator Card */}
         <div className="glass-card" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 8px 32px -8px rgba(56, 189, 248, 0.4)'
-            }}>
-              <Music size={28} color="#050a0e" />
-            </div>
+            <img
+              src="https://lastfm.freetls.fastly.net/i/u/avatar170s/29a353e4cad5024c03d8f8248567bdb3.png"
+              alt="Fraga9"
+              style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '16px',
+                objectFit: 'cover',
+                boxShadow: '0 8px 32px -8px rgba(56, 189, 248, 0.4)'
+              }}
+            />
             <div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Fraga9</h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Creator & Developer</p>
@@ -187,42 +186,7 @@ const AboutSection = forwardRef<HTMLElement>((_, ref) => {
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: '1.5rem',
-        marginBottom: '4rem'
-      }}>
-        {[
-          { value: '50K+', label: 'Matches Made' },
-          { value: '12K+', label: 'Active Users' },
-          { value: '1M+', label: 'Tracks Analyzed' },
-          { value: '128', label: 'Embedding Dims' }
-        ].map((stat, index) => (
-          <div
-            key={index}
-            style={{
-              textAlign: 'center',
-              padding: '1.5rem',
-              background: 'rgba(56, 189, 248, 0.03)',
-              borderRadius: '16px',
-              border: '1px solid rgba(56, 189, 248, 0.08)'
-            }}
-          >
-            <p style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '2rem',
-              fontWeight: 400,
-              background: 'linear-gradient(135deg, #38bdf8 0%, #7dd3fc 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
-            }}>{stat.value}</p>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>{stat.label}</p>
-          </div>
-        ))}
-      </div>
+      
 
       {/* Bottom Footer */}
       <div style={{

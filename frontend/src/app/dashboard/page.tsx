@@ -8,7 +8,8 @@ import { MatchCard } from '@/components/MatchCard';
 import { 
   Music, LogOut, Loader2, Users, Sparkles, 
   MapPin, Calendar, Activity, Disc3, 
-  ExternalLink, Clock, TrendingUp
+  ExternalLink, Clock, TrendingUp, Play, Heart,
+  BarChart2, Headphones, Radio
 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 
@@ -84,22 +85,18 @@ export default function DashboardPage() {
     ? new Date(user.registered * 1000).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) 
     : null;
 
+  const nowPlaying = user?.recent_tracks?.find(t => t.nowplaying);
+  const recentTracks = user?.recent_tracks?.filter(t => !t.nowplaying)?.slice(0, 5) || [];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#050a0e' }}>
         <div className="text-center">
-          <div style={{
-            width: '64px',
-            height: '64px',
-            margin: '0 auto 1.5rem',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            animation: 'pulse 2s ease-in-out infinite'
-          }}>
-            <Loader2 className="w-8 h-8 text-[#050a0e] animate-spin" />
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 animate-pulse" />
+            <div className="absolute inset-[3px] rounded-xl bg-[#050a0e] flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+            </div>
           </div>
           <p style={{ color: 'rgba(232, 244, 248, 0.5)', fontWeight: 500 }}>Syncing your vibe...</p>
         </div>
@@ -110,336 +107,444 @@ export default function DashboardPage() {
   return (
     <>
       <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
         :root {
           --color-bg: #050a0e;
-          --color-bg-secondary: #0a1218;
-          --color-surface: rgba(56, 189, 248, 0.03);
-          --color-border: rgba(56, 189, 248, 0.1);
+          --color-surface: rgba(14, 165, 233, 0.04);
+          --color-border: rgba(14, 165, 233, 0.12);
           --color-text: #e8f4f8;
           --color-text-muted: rgba(232, 244, 248, 0.5);
-          --color-accent: #38bdf8;
-          --color-accent-secondary: #06b6d4;
+          --color-accent: #0ea5e9;
+          --color-accent-light: #38bdf8;
           --font-display: 'Instrument Serif', Georgia, serif;
           --font-body: 'Outfit', -apple-system, sans-serif;
         }
 
+        * { box-sizing: border-box; }
+        
         body {
           font-family: var(--font-body);
           background: var(--color-bg);
           color: var(--color-text);
+          margin: 0;
         }
 
-        .glass-card {
-          background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(6, 182, 212, 0.03) 100%);
+        .bento-card {
+          background: linear-gradient(135deg, rgba(14, 165, 233, 0.06) 0%, rgba(6, 182, 212, 0.02) 100%);
           backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(56, 189, 248, 0.12);
+          border: 1px solid rgba(14, 165, 233, 0.1);
           border-radius: 24px;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          overflow: hidden;
         }
 
-        .glass-card:hover {
-          background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(6, 182, 212, 0.05) 100%);
-          border-color: rgba(56, 189, 248, 0.2);
+        .bento-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: 24px;
+          padding: 1px;
+          background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, transparent 50%, rgba(6, 182, 212, 0.1) 100%);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.4s ease;
         }
 
-        .stat-number {
-          font-family: var(--font-display);
-          background: linear-gradient(135deg, #38bdf8 0%, #7dd3fc 100%);
+        .bento-card:hover::before {
+          opacity: 1;
+        }
+
+        .bento-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(14, 165, 233, 0.2);
+          box-shadow: 0 20px 40px -20px rgba(14, 165, 233, 0.15);
+        }
+
+        .gradient-text {
+          background: linear-gradient(135deg, #38bdf8 0%, #22d3ee 50%, #a5f3fc 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
 
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(56, 189, 248, 0.05);
-          border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(56, 189, 248, 0.2);
-          border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(56, 189, 248, 0.3);
+        .stat-value {
+          font-family: var(--font-display);
+          font-size: 2.5rem;
+          font-weight: 400;
+          letter-spacing: -0.02em;
         }
 
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.02); }
+        .now-playing-pulse {
+          animation: nowPlayingPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes nowPlayingPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+          50% { box-shadow: 0 0 0 12px rgba(34, 197, 94, 0); }
+        }
+
+        .audio-visualizer {
+          display: flex;
+          align-items: flex-end;
+          gap: 3px;
+          height: 32px;
+        }
+
+        .audio-bar {
+          width: 4px;
+          background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+          border-radius: 2px;
+          animation: audioBar 1s ease-in-out infinite;
+        }
+
+        @keyframes audioBar {
+          0%, 100% { height: 8px; }
+          50% { height: 100%; }
+        }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .track-row {
+          transition: all 0.3s ease;
+        }
+        
+        .track-row:hover {
+          background: rgba(14, 165, 233, 0.06);
+        }
+
+        .artist-card {
+          position: relative;
+          padding: 1rem;
+          border-radius: 16px;
+          background: rgba(14, 165, 233, 0.04);
+          border: 1px solid rgba(14, 165, 233, 0.08);
+          transition: all 0.3s ease;
+        }
+
+        .artist-card:hover {
+          background: rgba(14, 165, 233, 0.08);
+          border-color: rgba(14, 165, 233, 0.15);
+          transform: translateY(-2px);
+        }
+
+        .rank-badge {
+          position: absolute;
+          top: -8px;
+          left: -8px;
+          width: 24px;
+          height: 24px;
+          border-radius: 8px;
+          background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: 700;
+          color: #050a0e;
+          box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
         }
       `}</style>
 
       <div className="min-h-screen relative" style={{ background: '#050a0e' }}>
-        {/* Background Effects */}
+        {/* Background */}
         <div className="fixed inset-0 z-0" style={{
           background: `
-            radial-gradient(ellipse 80% 50% at 20% 40%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
-            radial-gradient(ellipse 60% 40% at 80% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
-            radial-gradient(ellipse 50% 30% at 50% 80%, rgba(34, 211, 238, 0.05) 0%, transparent 50%),
-            linear-gradient(180deg, #050a0e 0%, #0a1218 100%)
+            radial-gradient(ellipse 100% 80% at 0% 0%, rgba(14, 165, 233, 0.12) 0%, transparent 50%),
+            radial-gradient(ellipse 80% 60% at 100% 100%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+            linear-gradient(180deg, #050a0e 0%, #071015 100%)
           `
         }} />
 
-        {/* Floating Orbs */}
-        <div className="fixed w-[500px] h-[500px] rounded-full -top-[200px] -right-[100px] opacity-30 blur-[120px] pointer-events-none" style={{
-          background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
-        }} />
-        <div className="fixed w-[400px] h-[400px] rounded-full -bottom-[150px] -left-[100px] opacity-30 blur-[120px] pointer-events-none" style={{
-          background: 'linear-gradient(135deg, #22d3ee 0%, #38bdf8 100%)'
-        }} />
-
-        {/* Noise Overlay */}
-        <div className="fixed inset-0 opacity-[0.02] pointer-events-none z-[1]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`
+        {/* Subtle Grid Pattern */}
+        <div className="fixed inset-0 z-0 opacity-[0.015]" style={{
+          backgroundImage: `
+            linear-gradient(rgba(14, 165, 233, 1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(14, 165, 233, 1) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px'
         }} />
 
         {/* Content */}
         <div className="relative z-10">
           {/* Header */}
-          <nav className="flex items-center justify-between px-6 md:px-12 lg:px-24 py-6 backdrop-blur-md border-b sticky top-0 z-50" style={{
-            background: 'rgba(5, 10, 14, 0.8)',
-            borderColor: 'rgba(56, 189, 248, 0.1)'
+          <nav className="flex items-center justify-between px-6 lg:px-10 py-5 backdrop-blur-xl border-b sticky top-0 z-50" style={{
+            background: 'rgba(5, 10, 14, 0.85)',
+            borderColor: 'rgba(14, 165, 233, 0.1)'
           }}>
-            <div className="flex items-center gap-3">
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '12px',
-                background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <Music size={20} color="#050a0e" />
+            <a href="/" className="flex items-center gap-3 group">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105" style={{
+                  background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
+                  boxShadow: '0 4px 20px rgba(14, 165, 233, 0.3)'
+                }}>
+                  <Music size={20} color="#050a0e" strokeWidth={2.5} />
+                </div>
               </div>
-              <span style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '1.5rem',
-                fontWeight: 400,
-                color: '#e8f4f8'
-              }}>VibeMatch</span>
-            </div>
+              <span className="text-xl font-medium" style={{ fontFamily: 'var(--font-display)' }}>VibeMatch</span>
+            </a>
 
-            <div className="flex items-center gap-6">
-              <div className="text-right hidden md:block">
-                <p className="text-sm font-semibold" style={{ color: '#e8f4f8' }}>{user?.real_name || storedUsername}</p>
-                <p className="text-xs font-medium" style={{ color: 'rgba(232, 244, 248, 0.5)' }}>{formatNumber(user?.playcount || 0)} scrobbles</p>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden" style={{
-                  background: 'rgba(56, 189, 248, 0.1)',
-                  border: '2px solid rgba(56, 189, 248, 0.2)'
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-full" style={{
+                background: 'rgba(14, 165, 233, 0.06)',
+                border: '1px solid rgba(14, 165, 233, 0.1)'
+              }}>
+                <div className="w-8 h-8 rounded-full overflow-hidden" style={{
+                  background: 'rgba(14, 165, 233, 0.2)'
                 }}>
                   {user?.image ? (
                     <img src={user.image} alt="User" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-sm font-bold" style={{ color: '#38bdf8' }}>
+                    <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ color: '#0ea5e9' }}>
                       {storedUsername[0]?.toUpperCase()}
                     </div>
                   )}
                 </div>
-                <button 
-                  onClick={handleLogout}
-                  className="p-2 rounded-full transition-all"
-                  style={{ color: 'rgba(232, 244, 248, 0.4)' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#f87171';
-                    e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'rgba(232, 244, 248, 0.4)';
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  <LogOut className="w-5 h-5" />
-                </button>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: '#e8f4f8' }}>{user?.real_name || storedUsername}</p>
+                  <p className="text-[11px] font-medium" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>{formatNumber(user?.playcount || 0)} scrobbles</p>
+                </div>
               </div>
+              
+              <button 
+                onClick={handleLogout}
+                className="p-2.5 rounded-xl transition-all"
+                style={{ 
+                  color: 'rgba(232, 244, 248, 0.4)',
+                  background: 'rgba(255, 255, 255, 0.02)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#f87171';
+                  e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(232, 244, 248, 0.4)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                }}
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
           </nav>
 
-          <div className="container mx-auto px-6 md:px-12 lg:px-24 py-10 space-y-8">
-            
-            {/* Hero Section */}
-            <div className="grid lg:grid-cols-3 gap-6">
+          <div className="px-6 lg:px-10 py-8">
+            {/* Bento Grid Layout */}
+            <div className="grid grid-cols-12 gap-4 lg:gap-5 max-w-[1600px] mx-auto">
               
-              {/* Profile Card */}
-              <div className="lg:col-span-2 glass-card p-8 relative overflow-hidden">
-                {/* Gradient accent */}
-                <div className="absolute top-0 left-0 w-full h-32 opacity-50" style={{
-                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%)'
-                }} />
-                
-                <div className="relative flex flex-col md:flex-row gap-6 items-center md:items-end">
-                  {/* Avatar */}
-                  <div className="relative -mt-4">
-                    <div className="w-32 h-32 rounded-full p-1" style={{
-                      background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)',
-                      boxShadow: '0 8px 32px -8px rgba(56, 189, 248, 0.4)'
-                    }}>
-                      <img 
-                        src={user?.image || `https://ui-avatars.com/api/?name=${storedUsername}&background=0a1218&color=38bdf8`} 
-                        alt="Profile" 
-                        className="w-full h-full object-cover rounded-full"
-                        style={{ border: '4px solid #050a0e' }}
-                      />
+              {/* Profile Card - Spans 4 cols */}
+              <div className="col-span-12 lg:col-span-4 bento-card p-6">
+                <div className="flex flex-col h-full">
+                  {/* Avatar & Name */}
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="relative flex-shrink-0">
+                      <div className="w-20 h-20 rounded-2xl p-[2px]" style={{
+                        background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
+                      }}>
+                        <img 
+                          src={user?.image || `https://ui-avatars.com/api/?name=${storedUsername}&background=0a1218&color=0ea5e9`} 
+                          alt="Profile" 
+                          className="w-full h-full object-cover rounded-[14px]"
+                          style={{ background: '#0a1218' }}
+                        />
+                      </div>
+                      <a 
+                        href={user?.url || `https://last.fm/user/${storedUsername}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute -bottom-1 -right-1 p-1.5 rounded-lg transition-transform hover:scale-110"
+                        style={{
+                          background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
+                          boxShadow: '0 4px 12px rgba(14, 165, 233, 0.4)'
+                        }}
+                      >
+                        <ExternalLink className="w-3 h-3" color="#050a0e" />
+                      </a>
                     </div>
-                    <a 
-                      href={user?.url || `https://last.fm/user/${storedUsername}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="absolute bottom-2 right-2 p-2 rounded-full transition-transform hover:scale-110"
-                      style={{
-                        background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)',
-                        boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)'
-                      }}
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" color="#050a0e" />
-                    </a>
+
+                    <div className="flex-1 min-w-0">
+                      <h1 className="text-2xl font-bold truncate mb-1" style={{ fontFamily: 'var(--font-display)' }}>
+                        {user?.real_name || user?.username}
+                      </h1>
+                      <p className="text-sm font-medium" style={{ color: '#0ea5e9' }}>@{user?.username}</p>
+                    </div>
                   </div>
 
-                  <div className="flex-1 text-center md:text-left mb-2">
-                    <h1 className="text-4xl font-bold tracking-tight mb-2" style={{ 
-                      fontFamily: 'var(--font-display)',
-                      color: '#e8f4f8' 
-                    }}>
-                      {user?.real_name || user?.username}
-                    </h1>
-                    
-                    {/* Info Badges */}
-                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-3">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium" style={{
-                        background: 'rgba(56, 189, 248, 0.1)',
-                        border: '1px solid rgba(56, 189, 248, 0.15)',
-                        color: '#38bdf8'
+                  {/* Meta Badges */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {user?.country && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{
+                        background: 'rgba(14, 165, 233, 0.08)',
+                        border: '1px solid rgba(14, 165, 233, 0.12)',
+                        color: 'rgba(232, 244, 248, 0.7)'
                       }}>
-                        @{user?.username}
+                        <MapPin className="w-3 h-3" style={{ color: '#0ea5e9' }} /> {user.country}
                       </span>
-                      {user?.country && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium" style={{
-                          background: 'rgba(56, 189, 248, 0.08)',
-                          border: '1px solid rgba(56, 189, 248, 0.1)',
-                          color: 'rgba(232, 244, 248, 0.7)'
-                        }}>
-                          <MapPin className="w-3.5 h-3.5" style={{ color: '#38bdf8' }} /> {user.country}
-                        </span>
-                      )}
-                      {joinDate && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium" style={{
-                          background: 'rgba(56, 189, 248, 0.08)',
-                          border: '1px solid rgba(56, 189, 248, 0.1)',
-                          color: 'rgba(232, 244, 248, 0.7)'
-                        }}>
-                          <Calendar className="w-3.5 h-3.5" style={{ color: '#22d3ee' }} /> Since {joinDate}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-3 gap-8 mt-10 pt-8" style={{ borderTop: '1px solid rgba(56, 189, 248, 0.1)' }}>
-                  <div>
-                    <div className="stat-number text-3xl font-bold">{formatNumber(user?.playcount || 0)}</div>
-                    <div className="text-xs font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Total Scrobbles</div>
-                  </div>
-                  <div>
-                    <div className="stat-number text-3xl font-bold">{user?.top_artists?.length || 50}</div>
-                    <div className="text-xs font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Top Artists</div>
-                  </div>
-                  <div>
-                    <div className="stat-number text-3xl font-bold">{matches.length}</div>
-                    <div className="text-xs font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Matches Found</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Vibe */}
-              <div className="glass-card p-6 flex flex-col h-full">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#e8f4f8' }}>
-                    <Activity className="w-5 h-5" style={{ color: '#22c55e' }} /> Recent Vibe
-                  </h3>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold" style={{
-                    background: 'rgba(34, 197, 94, 0.15)',
-                    color: '#22c55e',
-                    border: '1px solid rgba(34, 197, 94, 0.3)'
-                  }}>LIVE</span>
-                </div>
-
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-1">
-                  {(user?.recent_tracks || []).slice(0, 8).map((track, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl transition-all group" 
-                      style={{ background: 'transparent' }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.05)'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 relative overflow-hidden" style={{
-                        background: 'rgba(56, 189, 248, 0.1)',
-                        border: '1px solid rgba(56, 189, 248, 0.15)'
+                    )}
+                    {joinDate && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{
+                        background: 'rgba(14, 165, 233, 0.08)',
+                        border: '1px solid rgba(14, 165, 233, 0.12)',
+                        color: 'rgba(232, 244, 248, 0.7)'
                       }}>
-                        {track.image ? (
-                          <img src={track.image} className="w-full h-full object-cover" />
-                        ) : (
-                          <Disc3 className="w-5 h-5" style={{ color: 'rgba(232, 244, 248, 0.4)' }} />
-                        )}
-                        {track.nowplaying && (
-                          <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)' }}>
-                            <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ 
-                              background: '#22c55e',
-                              boxShadow: '0 0 12px rgba(34, 197, 94, 0.8)'
-                            }} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold truncate" style={{ 
-                          color: track.nowplaying ? '#22c55e' : '#e8f4f8' 
-                        }}>
-                          {track.name}
-                        </div>
-                        <div className="text-xs truncate" style={{ color: 'rgba(232, 244, 248, 0.5)' }}>{track.artist}</div>
-                      </div>
-                      {!track.nowplaying && (
-                        <Clock className="w-3.5 h-3.5" style={{ color: 'rgba(232, 244, 248, 0.2)' }} />
-                      )}
+                        <Calendar className="w-3 h-3" style={{ color: '#22d3ee' }} /> {joinDate}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-3 mt-auto">
+                    <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(14, 165, 233, 0.04)' }}>
+                      <div className="stat-value gradient-text">{formatNumber(user?.playcount || 0)}</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Scrobbles</div>
                     </div>
-                  ))}
+                    <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(14, 165, 233, 0.04)' }}>
+                      <div className="stat-value gradient-text">{user?.top_artists?.length || 50}</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Artists</div>
+                    </div>
+                    <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(14, 165, 233, 0.04)' }}>
+                      <div className="stat-value gradient-text">{matches.length}</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Matches</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Main Content Grid */}
-            <div className="grid lg:grid-cols-2 gap-8">
-              
-              {/* Top Artists */}
-              <div>
-                <div className="flex items-center gap-2 mb-4 px-1">
-                  <Users className="w-5 h-5" style={{ color: '#38bdf8' }} />
-                  <h2 className="text-xl font-bold" style={{ color: '#e8f4f8' }}>Top Artists</h2>
+              {/* Now Playing / Recent - Spans 5 cols */}
+              <div className="col-span-12 lg:col-span-5 bento-card p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <Radio className="w-5 h-5" style={{ color: nowPlaying ? '#22c55e' : '#0ea5e9' }} />
+                    <h3 className="text-lg font-semibold">{nowPlaying ? 'Now Playing' : 'Recent Vibe'}</h3>
+                  </div>
+                  {nowPlaying && (
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold now-playing-pulse" style={{
+                      background: 'rgba(34, 197, 94, 0.15)',
+                      color: '#22c55e',
+                      border: '1px solid rgba(34, 197, 94, 0.3)'
+                    }}>LIVE</span>
+                  )}
+                </div>
+
+                {nowPlaying ? (
+                  <div className="flex gap-5">
+                    {/* Album Art */}
+                    <div className="relative w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden" style={{
+                      background: 'rgba(14, 165, 233, 0.1)',
+                      border: '1px solid rgba(14, 165, 233, 0.15)'
+                    }}>
+                      {nowPlaying.image ? (
+                        <img src={nowPlaying.image} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Disc3 className="w-10 h-10" style={{ color: 'rgba(232, 244, 248, 0.3)' }} />
+                        </div>
+                      )}
+                      {/* Play overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'rgba(34, 197, 94, 0.9)' }}>
+                          <Play className="w-5 h-5 ml-0.5" color="#fff" fill="#fff" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Track Info */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <p className="text-xl font-bold truncate mb-1" style={{ color: '#e8f4f8' }}>{nowPlaying.name}</p>
+                      <p className="text-sm truncate mb-4" style={{ color: 'rgba(232, 244, 248, 0.6)' }}>{nowPlaying.artist}</p>
+                      
+                      {/* Audio Visualizer */}
+                      <div className="audio-visualizer">
+                        {[...Array(12)].map((_, i) => (
+                          <div 
+                            key={i} 
+                            className="audio-bar" 
+                            style={{ animationDelay: `${i * 0.1}s`, height: `${8 + Math.random() * 16}px` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {recentTracks.slice(0, 4).map((track, i) => (
+                      <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl track-row">
+                        <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style={{
+                          background: 'rgba(14, 165, 233, 0.08)',
+                          border: '1px solid rgba(14, 165, 233, 0.1)'
+                        }}>
+                          {track.image ? (
+                            <img src={track.image} className="w-full h-full object-cover" />
+                          ) : (
+                            <Disc3 className="w-5 h-5" style={{ color: 'rgba(232, 244, 248, 0.3)' }} />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold truncate" style={{ color: '#e8f4f8' }}>{track.name}</p>
+                          <p className="text-xs truncate" style={{ color: 'rgba(232, 244, 248, 0.5)' }}>{track.artist}</p>
+                        </div>
+                        <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: 'rgba(232, 244, 248, 0.2)' }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Stats - Spans 3 cols */}
+              <div className="col-span-12 lg:col-span-3 grid grid-rows-2 gap-4 lg:gap-5">
+                <div className="bento-card p-5 flex flex-col justify-between">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Headphones className="w-4 h-4" style={{ color: '#0ea5e9' }} />
+                    <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Listening Time</span>
+                  </div>
+                  <div>
+                    <div className="stat-value gradient-text" style={{ fontSize: '2rem' }}>
+                      {Math.round((user?.playcount || 0) * 3.5 / 60)}h
+                    </div>
+                    <p className="text-xs mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>~3.5 min avg per track</p>
+                  </div>
+                </div>
+                
+                <div className="bento-card p-5 flex flex-col justify-between">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BarChart2 className="w-4 h-4" style={{ color: '#22d3ee' }} />
+                    <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Avg per Day</span>
+                  </div>
+                  <div>
+                    <div className="stat-value gradient-text" style={{ fontSize: '2rem' }}>
+                      {user?.registered ? Math.round((user?.playcount || 0) / ((Date.now() / 1000 - user.registered) / 86400)) : 0}
+                    </div>
+                    <p className="text-xs mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>tracks scrobbled</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Artists - Spans 6 cols */}
+              <div className="col-span-12 lg:col-span-6 bento-card p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5" style={{ color: '#0ea5e9' }} />
+                    <h3 className="text-lg font-semibold">Top Artists</h3>
+                  </div>
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{
+                    background: 'rgba(14, 165, 233, 0.08)',
+                    color: 'rgba(232, 244, 248, 0.5)'
+                  }}>All Time</span>
                 </div>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {user?.top_artists?.slice(0, 9).map((artist, idx) => (
-                    <div 
-                      key={idx} 
-                      className="glass-card p-4 cursor-default transition-all"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.3)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.12)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      <div className="font-semibold text-sm truncate" style={{ color: '#e8f4f8' }}>
+                  {user?.top_artists?.slice(0, 6).map((artist, idx) => (
+                    <div key={idx} className="artist-card">
+                      {idx < 3 && <div className="rank-badge">{idx + 1}</div>}
+                      <div className="font-semibold text-sm truncate mb-1" style={{ color: '#e8f4f8' }}>
                         {artist.name}
                       </div>
-                      <div className="text-xs mt-1 font-medium" style={{ color: 'rgba(232, 244, 248, 0.5)' }}>
+                      <div className="text-xs font-medium" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>
                         {formatNumber(artist.playcount)} plays
                       </div>
                     </div>
@@ -447,71 +552,75 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Top Tracks */}
-              <div>
-                <div className="flex items-center gap-2 mb-4 px-1">
-                  <TrendingUp className="w-5 h-5" style={{ color: '#22d3ee' }} />
-                  <h2 className="text-xl font-bold" style={{ color: '#e8f4f8' }}>Top Tracks</h2>
+              {/* Top Tracks - Spans 6 cols */}
+              <div className="col-span-12 lg:col-span-6 bento-card p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" style={{ color: '#22d3ee' }} />
+                    <h3 className="text-lg font-semibold">Top Tracks</h3>
+                  </div>
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-lg" style={{
+                    background: 'rgba(14, 165, 233, 0.08)',
+                    color: 'rgba(232, 244, 248, 0.5)'
+                  }}>All Time</span>
                 </div>
 
-                <div className="glass-card overflow-hidden">
-                  {user?.top_tracks && user.top_tracks.length > 0 ? (
-                    user.top_tracks.slice(0, 8).map((track, idx) => (
-                      <div 
-                        key={idx} 
-                        className="flex items-center gap-4 p-3.5 transition-all group"
-                        style={{ borderBottom: idx < 7 ? '1px solid rgba(56, 189, 248, 0.08)' : 'none' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.05)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                      >
-                        <div className="w-6 text-center font-mono text-sm font-bold" style={{ color: 'rgba(232, 244, 248, 0.3)' }}>
-                          {idx + 1}
-                        </div>
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{
-                          background: 'rgba(56, 189, 248, 0.1)',
-                          border: '1px solid rgba(56, 189, 248, 0.15)'
-                        }}>
-                          <Music className="w-4 h-4" style={{ color: 'rgba(232, 244, 248, 0.4)' }} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="text-sm font-semibold truncate" style={{ color: '#e8f4f8' }}>{track.name}</div>
-                          <div className="text-xs truncate" style={{ color: 'rgba(232, 244, 248, 0.5)' }}>{track.artist}</div>
-                        </div>
-                        <div className="text-xs font-mono font-medium px-2.5 py-1 rounded-md" style={{
-                          background: 'rgba(56, 189, 248, 0.1)',
-                          color: '#38bdf8'
-                        }}>
-                          {formatNumber(track.playcount || 0)}
-                        </div>
+                <div className="space-y-1">
+                  {user?.top_tracks?.slice(0, 5).map((track, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-center gap-3 p-2.5 rounded-xl track-row"
+                    >
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0" style={{
+                        background: idx < 3 ? 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)' : 'rgba(14, 165, 233, 0.1)',
+                        color: idx < 3 ? '#050a0e' : 'rgba(232, 244, 248, 0.4)'
+                      }}>
+                        {idx + 1}
                       </div>
-                    ))
-                  ) : (
-                    <div className="p-8 text-center" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Loading tracks...</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Matches Section */}
-            <div className="pt-4">
-              <div className="flex items-center gap-2 mb-6">
-                <Sparkles className="w-6 h-6" style={{ color: '#38bdf8' }} />
-                <h2 className="text-2xl font-bold" style={{ color: '#e8f4f8' }}>Your Top Matches</h2>
-              </div>
-              
-              {matches.length > 0 ? (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {matches.map((match, idx) => (
-                    <MatchCard key={idx} match={match} rank={idx + 1} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold truncate" style={{ color: '#e8f4f8' }}>{track.name}</p>
+                        <p className="text-xs truncate" style={{ color: 'rgba(232, 244, 248, 0.5)' }}>{track.artist}</p>
+                      </div>
+                      <div className="text-xs font-mono font-semibold px-2.5 py-1 rounded-lg flex-shrink-0" style={{
+                        background: 'rgba(14, 165, 233, 0.08)',
+                        color: '#0ea5e9'
+                      }}>
+                        {formatNumber(track.playcount || 0)}
+                      </div>
+                    </div>
                   ))}
                 </div>
-              ) : (
-                <div className="glass-card p-12 text-center">
-                  <p style={{ color: 'rgba(232, 244, 248, 0.5)' }}>Finding your matches...</p>
-                </div>
-              )}
-            </div>
+              </div>
 
+              {/* Matches Section - Full Width */}
+              <div className="col-span-12 mt-4">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-xl" style={{
+                    background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(6, 182, 212, 0.1) 100%)',
+                    border: '1px solid rgba(14, 165, 233, 0.2)'
+                  }}>
+                    <Sparkles className="w-5 h-5" style={{ color: '#0ea5e9' }} />
+                  </div>
+                  <h2 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+                    Your Top <span className="gradient-text">Matches</span>
+                  </h2>
+                </div>
+                
+                {matches.length > 0 ? (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    {matches.slice(0, 8).map((match, idx) => (
+                      <MatchCard key={idx} match={match} rank={idx + 1} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bento-card p-12 text-center">
+                    <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin" style={{ color: '#0ea5e9' }} />
+                    <p style={{ color: 'rgba(232, 244, 248, 0.5)' }}>Finding your matches...</p>
+                  </div>
+                )}
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
