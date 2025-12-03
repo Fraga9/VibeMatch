@@ -6,6 +6,8 @@ import { formatNumber } from '@/lib/utils';
 interface Artist {
   name: string;
   playcount: number;
+  image?: string;
+  mbid?: string;
 }
 
 interface TopArtistsCardProps {
@@ -25,16 +27,47 @@ export function TopArtistsCard({ artists }: TopArtistsCardProps) {
           color: 'rgba(232, 244, 248, 0.5)'
         }}>All Time</span>
       </div>
-      
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {artists.slice(0, 6).map((artist, idx) => (
-          <div key={idx} className="artist-card">
-            {idx < 3 && <div className="rank-badge">{idx + 1}</div>}
-            <div className="font-semibold text-sm truncate mb-1" style={{ color: '#e8f4f8' }}>
-              {artist.name}
+
+      <div className="space-y-2">
+        {artists.slice(0, 5).map((artist, idx) => (
+          <div
+            key={idx}
+            className="flex items-center gap-3 p-2.5 rounded-xl track-row"
+          >
+            {/* Ranking Number */}
+            <div className="w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold text-sm" style={{
+              color: idx < 3 ? '#0ea5e9' : 'rgba(232, 244, 248, 0.5)',
+              fontFamily: 'var(--font-display)'
+            }}>
+              {idx + 1}
             </div>
-            <div className="text-xs font-medium" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>
-              {formatNumber(artist.playcount)} plays
+
+            {/* Artist Image - Clean */}
+            <div className="relative w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden" style={{
+              background: 'rgba(14, 165, 233, 0.1)',
+              border: '1px solid rgba(14, 165, 233, 0.15)'
+            }}>
+              {artist.image ? (
+                <img src={artist.image} className="w-full h-full object-cover" alt={artist.name} />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center" style={{
+                  background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
+                }}>
+                  <div className="text-sm font-bold" style={{ color: '#050a0e' }}>
+                    {artist.name.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Artist Info */}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold truncate" style={{ color: '#e8f4f8' }}>
+                {artist.name}
+              </p>
+              <p className="text-xs truncate" style={{ color: 'rgba(232, 244, 248, 0.5)' }}>
+                {formatNumber(artist.playcount || 0)} plays
+              </p>
             </div>
           </div>
         ))}
