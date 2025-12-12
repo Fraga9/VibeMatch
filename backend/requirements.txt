@@ -1,6 +1,7 @@
 # FastAPI and Web Server
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
+gunicorn==21.2.0  # Production WSGI server for App Platform
 python-multipart==0.0.6
 pydantic==2.5.3
 pydantic-settings==2.1.0
@@ -14,6 +15,7 @@ torch==2.1.2
 torch-geometric==2.4.0
 numpy==1.26.3
 scikit-learn==1.4.0
+faiss-cpu==1.7.4  # Fast similarity search (use faiss-gpu for CUDA support)
 
 # Vector Database
 qdrant-client==1.7.0
@@ -32,3 +34,5 @@ pandas==2.1.4
 # Utilities
 tqdm==4.66.1
 requests==2.31.0
+aiolimiter==1.1.0  # Async rate limiting
+orjson==3.9.10  # Fast JSON parsing (optional, falls back to json)

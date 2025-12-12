@@ -9,33 +9,50 @@ interface NavigationProps {
 
 export default function Navigation({ onHowItWorksClick, onAboutClick }: NavigationProps) {
   return (
-    <nav style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '1.5rem 2rem',
-      maxWidth: '1400px',
-      margin: '0 auto',
-      width: '100%'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+    <nav className="flex items-center justify-between py-4 md:py-6 w-full">
+      {/* Logo */}
+      <div className="flex items-center gap-2 md:gap-3">
         <Image
           src="/vibes.svg"
           alt="VibeMatch Logo"
-          width={40}
-          height={40}
+          width={36}
+          height={36}
+          className="md:w-10 md:h-10"
           style={{ borderRadius: '12px' }}
         />
         <span style={{
           fontFamily: 'var(--font-display)',
-          fontSize: '1.5rem',
+          fontSize: 'clamp(1.125rem, 4vw, 1.5rem)',
           fontWeight: 400
         }}>VibeMatch</span>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <button onClick={onHowItWorksClick} className="nav-link">How it Works</button>
-        <button onClick={onAboutClick} className="nav-link">About</button>
+      {/* Navigation Links - Improved touch targets */}
+      <div className="flex items-center gap-1 md:gap-2">
+        <button
+          onClick={onHowItWorksClick}
+          className="nav-link"
+          style={{
+            minWidth: '48px',
+            minHeight: '48px',
+            padding: '0.75rem 1rem',
+            fontSize: '0.8125rem'
+          }}
+        >
+          How it Works
+        </button>
+        <button
+          onClick={onAboutClick}
+          className="nav-link"
+          style={{
+            minWidth: '48px',
+            minHeight: '48px',
+            padding: '0.75rem 1rem',
+            fontSize: '0.8125rem'
+          }}
+        >
+          About
+        </button>
       </div>
     </nav>
   );

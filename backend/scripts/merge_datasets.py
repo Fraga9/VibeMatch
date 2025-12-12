@@ -149,9 +149,17 @@ def merge_lastfm_to_augmented():
     formatted_tracks = []
     genre_stats = Counter()
     tracks_with_genres = 0
+    skipped_null_artists = 0
     
     for idx, row in df.iterrows():
         artist = row['artist_name']
+        
+        # Skip if artist is null/NaN
+        if pd.isna(artist):
+            skipped_null_artists += 1
+            continue
+        
+        artist = str(artist).strip()
         tags = artist_tags.get(artist.lower(), [])
         
         # Convert tags to genre IDs
@@ -176,6 +184,8 @@ def merge_lastfm_to_augmented():
     output_df.to_csv(output_path, index=False)
     
     print(f"\n✅ Saved {len(formatted_tracks)} tracks to {output_path}")
+    if skipped_null_artists > 0:
+        print(f"⚠️  Skipped {skipped_null_artists} tracks with null artist names")
     print(f"📊 Tracks with genre assignments: {tracks_with_genres}/{len(formatted_tracks)} ({100*tracks_with_genres/len(formatted_tracks):.1f}%)")
     
     # Show genre distribution

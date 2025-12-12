@@ -10,12 +10,11 @@ export default function FloatingCards() {
         right: '5%',
         top: '50%',
         transform: 'translateY(-50%)',
-        display: 'flex',
-        flexDirection: 'column',
         gap: '1.5rem',
-        maxWidth: '300px'
+        maxWidth: '300px',
+        zIndex: 0
       }}
-      className="hidden lg:flex"
+      className="hidden xl:flex flex-col"
     >
       {/* AI Trained Card */}
       <div className="glass-card float-card" style={{ padding: '1.5rem', textAlign: 'center' }}>

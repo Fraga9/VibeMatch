@@ -39,11 +39,16 @@ env/
 *.pt
 *.ckpt
 
-# Data and Models (uncomment if you want to track them)
+# Data and Models
 backend/data/*
 !backend/data/.gitkeep
+
+# Model files - only ignore training checkpoints, keep embeddings
 backend/model/*.pt
-backend/model/*.pkl
+backend/model/training_*.png
+backend/model/training_*.json
+!backend/model/precomputed_embeddings.pkl
+!backend/model/track_artist_mapping.pkl
 !backend/model/.gitkeep
 
 # Node.js
@@ -87,3 +92,5 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+
+DEPLOYMENT.md

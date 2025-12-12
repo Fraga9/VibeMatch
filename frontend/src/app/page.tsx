@@ -58,24 +58,35 @@ export default function LandingPage() {
 
         html {
           scroll-behavior: smooth;
+          overflow-x: hidden; /* Critical for mobile */
+          width: 100%;
         }
 
         body {
           font-family: var(--font-body);
           background: var(--color-bg);
           color: var(--color-text);
-          overflow-x: hidden;
+          overflow-x: hidden; /* Double safety */
+          width: 100%;
+          position: relative;
+        }
+
+        .background-wrapper {
+          position: fixed;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+          z-index: 0;
         }
 
         .hero-gradient {
-          position: fixed;
+          position: absolute; /* Changed from fixed to absolute inside wrapper */
           inset: 0;
           background: 
             radial-gradient(ellipse 80% 50% at 20% 40%, rgba(56, 189, 248, 0.12) 0%, transparent 50%),
             radial-gradient(ellipse 60% 40% at 80% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
             radial-gradient(ellipse 50% 30% at 50% 80%, rgba(34, 211, 238, 0.08) 0%, transparent 50%),
             linear-gradient(180deg, #050a0e 0%, #0a1218 100%);
-          z-index: 0;
         }
 
         .orb {
@@ -166,7 +177,12 @@ export default function LandingPage() {
           font-size: 0.875rem;
           font-weight: 500;
           color: var(--color-text-muted);
-          padding: 0.5rem 1rem;
+          padding: 0.75rem 1rem;
+          min-width: 48px;
+          min-height: 48px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           border-radius: 100px;
           transition: all 0.3s ease;
           text-decoration: none;
@@ -424,20 +440,35 @@ export default function LandingPage() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         @media (max-width: 768px) {
-          .headline { font-size: clamp(2.5rem, 12vw, 4rem); }
+          .headline { 
+            font-size: clamp(2.25rem, 11vw, 3.5rem);
+            line-height: 1.1;
+          }
+          
+          .nav-link {
+            font-size: 0.8125rem;
+            padding: 0.625rem 0.875rem;
+          }
+          
           .gnn-visual { height: 220px; }
           .gnn-node { width: 36px; height: 36px; font-size: 0.625rem; }
           .gnn-node-user { width: 48px; height: 48px; }
         }
       `}</style>
 
-      <BackgroundEffects />
+      <div className="background-wrapper">
+        <div className="hero-gradient" />
+        <BackgroundEffects />
+        <div className="noise" />
+      </div>
 
       <div style={{ position: 'relative', zIndex: 10 }}>
-        <Navigation 
-          onHowItWorksClick={scrollToHowItWorks} 
-          onAboutClick={scrollToAbout}
-        />
+        <div className="w-full max-w-[1400px] mx-auto px-5 md:px-8">
+          <Navigation 
+            onHowItWorksClick={scrollToHowItWorks} 
+            onAboutClick={scrollToAbout}
+          />
+        </div>
         <HeroSection onScrollToHowItWorks={scrollToHowItWorks} />
         <HowItWorks ref={howItWorksRef} />
         <AboutSection ref={aboutRef} />

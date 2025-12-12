@@ -56,25 +56,27 @@ export default function HeroSection({ onScrollToHowItWorks }: HeroSectionProps) 
   };
 
   return (
-    <section style={{
-      minHeight: 'calc(100vh - 80px)',
-      display: 'flex',
-      alignItems: 'center',
-      padding: '2rem',
-      maxWidth: '1400px',
-      margin: '0 auto',
-      width: '100%',
-      position: 'relative'
-    }}>
-      <div style={{ maxWidth: '720px' }}>
+    <section 
+      className="px-5 py-8 md:p-8"
+      style={{
+        minHeight: 'calc(100vh - 180px)',
+        display: 'flex',
+        alignItems: 'center',
+        maxWidth: '1400px',
+        margin: '0 auto',
+        width: '100%',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+      <div style={{ maxWidth: '720px', position: 'relative', zIndex: 10, width: '100%' }}>
         {/* Badge */}
-        <div className="badge" style={{ marginBottom: '2rem' }}>
+        <div className="badge mb-6 md:mb-8">
           <span className="pulse-dot" />
           <span>1,337 matches made today</span>
         </div>
 
         {/* Headline */}
-        <h1 className="headline" style={{ marginBottom: '1.5rem' }}>
+        <h1 className="headline mb-4 md:mb-6">
           Find your{' '}
           <span className="headline-italic">music</span>
           <br />
@@ -82,33 +84,34 @@ export default function HeroSection({ onScrollToHowItWorks }: HeroSectionProps) 
         </h1>
 
         {/* Description */}
-        <p style={{
-          fontSize: '1.125rem',
-          color: 'var(--color-text-muted)',
-          lineHeight: 1.7,
-          marginBottom: '2.5rem',
-          maxWidth: '540px'
-        }}>
+        <p 
+          className="text-lg md:text-xl mb-8 md:mb-10"
+          style={{
+            color: 'var(--color-text-muted)',
+            lineHeight: 1.6,
+            maxWidth: '540px'
+          }}
+        >
           Connect through the music you love. Our AI analyzes your listening history
           and matches you with people who share your exact vibe.
         </p>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{ maxWidth: '480px' }}>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: '480px', width: '100%' }}>
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Your Last.fm username"
               disabled={loading}
-              className="input-field"
+              className="input-field w-full"
               required
             />
             <button
               type="submit"
               disabled={loading || !username.trim()}
-              className="btn-primary"
+              className="btn-primary w-full sm:w-auto justify-center"
             >
               {loading ? (
                 <>
@@ -149,14 +152,12 @@ export default function HeroSection({ onScrollToHowItWorks }: HeroSectionProps) 
         </form>
 
         {/* Social Proof */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-          marginTop: '3rem',
-          paddingTop: '2rem',
-          borderTop: '1px solid var(--color-border)'
-        }}>
+        <div 
+          className="mt-8 md:mt-12 pt-8 border-t flex flex-wrap items-center gap-4"
+          style={{
+            borderColor: 'var(--color-border)'
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {[0, 1, 2, 3, 4].map((i) => (
               <div
@@ -179,24 +180,37 @@ export default function HeroSection({ onScrollToHowItWorks }: HeroSectionProps) 
 
       <FloatingCards />
 
-      {/* Scroll indicator */}
+      {/* Scroll indicator - Wrapper Strategy for proper centering + animation */}
       <div 
+        role="button"
+        tabIndex={0}
+        aria-label="Scroll to how it works section"
+        className="absolute z-20 cursor-pointer"
         style={{
-          position: 'absolute',
-          bottom: '2rem',
+          bottom: '-1rem', // Changed from 1.5rem to move it down
           left: '50%',
           transform: 'translateX(-50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '0.5rem',
-          cursor: 'pointer'
+          width: 'max-content',
+          padding: '1rem'
         }}
         onClick={onScrollToHowItWorks}
-        className="scroll-indicator"
+        onKeyDown={(e) => e.key === 'Enter' && onScrollToHowItWorks()}
       >
-        <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>See how it works</span>
-        <ChevronDown size={20} color="var(--color-accent)" />
+        {/* Child handles the bounce animation */}
+        <div className="scroll-indicator flex flex-col items-center gap-2">
+          <span 
+            className="text-xs md:text-sm"
+            style={{ 
+              color: 'var(--color-text-muted)', 
+              whiteSpace: 'nowrap',
+              textAlign: 'center',
+              textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+            }}
+          >
+            See how it works
+          </span>
+          <ChevronDown size={20} color="var(--color-accent)" />
+        </div>
       </div>
     </section>
   );
