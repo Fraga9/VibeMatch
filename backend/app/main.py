@@ -53,7 +53,10 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.ENVIRONMENT == "development" else ["https://vibematch.app"],
+    allow_origins=["*"] if settings.ENVIRONMENT == "development" else [
+        settings.FRONTEND_URL,
+        "http://localhost:3000",  # For local development
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
