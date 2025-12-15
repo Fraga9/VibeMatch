@@ -10,10 +10,20 @@ class QdrantService:
     """Service for interacting with Qdrant vector database"""
 
     def __init__(self):
-        self.client = QdrantClient(
-            host=settings.QDRANT_HOST,
-            port=settings.QDRANT_PORT
-        )
+        # Configure Qdrant client for both local and cloud
+        if settings.QDRANT_API_KEY:
+            # Qdrant Cloud configuration
+            self.client = QdrantClient(
+                url=f"https://{settings.QDRANT_HOST}:{settings.QDRANT_PORT}",
+                api_key=settings.QDRANT_API_KEY,
+            )
+        else:
+            # Local Qdrant configuration
+            self.client = QdrantClient(
+                host=settings.QDRANT_HOST,
+                port=settings.QDRANT_PORT,
+                https=settings.QDRANT_USE_HTTPS
+            )
         self.collection_name = settings.QDRANT_COLLECTION_USERS
         self.vector_size = settings.QDRANT_VECTOR_SIZE
         self._ensure_collection()

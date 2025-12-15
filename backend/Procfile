@@ -1,1 +1,2 @@
+release: bash check_lfs.sh || echo "Warning: LFS check failed"
 web: gunicorn -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080 --timeout 120 --worker-tmp-dir /dev/shm app.main:app
