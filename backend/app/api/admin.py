@@ -108,3 +108,36 @@ async def clean_duplicate_users(x_admin_key: str = Header(..., description="Admi
             status_code=500,
             detail=f"Failed to clean duplicates: {str(e)}"
         )
+
+
+@router.post("/initialize/indexes")
+async def initialize_indexes(x_admin_key: str = Header(..., description="Admin API key")):
+    """
+    Initialize/ensure payload indexes in Qdrant collection
+
+    Creates indexes for 'username' and 'is_real' fields to enable filtering.
+    Safe to run multiple times - will skip if indexes already exist.
+    Admin-only endpoint.
+    """
+    if not verify_admin_key(x_admin_key):
+        raise HTTPException(status_code=403, detail="Invalid admin API key")
+
+    try:
+        success = qdrant_service.ensure_indexes()
+
+        if success:
+            return {
+                "status": "success",
+                "message": "Payload indexes created/verified successfully"
+            }
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to create indexes"
+            )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to initialize indexes: {str(e)}"
+        )

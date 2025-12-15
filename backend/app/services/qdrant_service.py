@@ -1,5 +1,5 @@
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue
+from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, FieldCondition, MatchValue, PayloadSchemaType
 from typing import List, Dict, Optional
 import uuid
 from datetime import datetime
@@ -43,8 +43,42 @@ class QdrantService:
                     )
                 )
                 print(f"Created Qdrant collection: {self.collection_name}")
+                # Create payload indexes after collection creation
+                self._create_payload_indexes()
         except Exception as e:
             print(f"Error ensuring collection: {str(e)}")
+
+    def _create_payload_indexes(self):
+        """Create payload indexes for efficient filtering"""
+        try:
+            # Create index for username field (required for filtering)
+            self.client.create_payload_index(
+                collection_name=self.collection_name,
+                field_name="username",
+                field_schema=PayloadSchemaType.KEYWORD
+            )
+            print(f"✅ Created payload index for 'username' field")
+
+            # Create index for is_real field (used for ghost user filtering)
+            self.client.create_payload_index(
+                collection_name=self.collection_name,
+                field_name="is_real",
+                field_schema=PayloadSchemaType.BOOL
+            )
+            print(f"✅ Created payload index for 'is_real' field")
+
+        except Exception as e:
+            # Index might already exist, which is fine
+            print(f"Note: {str(e)}")
+
+    def ensure_indexes(self):
+        """Public method to ensure payload indexes exist (can be called from admin endpoint)"""
+        try:
+            self._create_payload_indexes()
+            return True
+        except Exception as e:
+            print(f"Error creating indexes: {str(e)}")
+            return False
 
     def add_user_embedding(
         self,
