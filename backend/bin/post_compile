@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Post-compile hook for DigitalOcean/Heroku buildpack
+# This runs after dependencies are installed
+
+echo "-----> Running post-compile hook"
+
+# Check if git-lfs is available
+if command -v git-lfs &> /dev/null; then
+    echo "       Git LFS found, pulling large files..."
+
+    # Pull LFS files
+    git lfs pull || echo "       Warning: git lfs pull failed"
+
+    # Verify embeddings file
+    if [ -f "model/precomputed_embeddings.pkl" ]; then
+        SIZE=$(stat -c%s "model/precomputed_embeddings.pkl" 2>/dev/null || stat -f%z "model/precomputed_embeddings.pkl" 2>/dev/null || echo "0")
+        echo "       Embeddings file size: $SIZE bytes"
+
+        if [ "$SIZE" -lt 1000000 ]; then
+            echo "       WARNING: Embeddings file too small ($SIZE bytes)"
+            echo "       This might be a Git LFS pointer, not the actual file"
+        else
+            echo "       ✅ Embeddings file OK"
+        fi
+    else
+        echo "       WARNING: Embeddings file not found"
+    fi
+else
+    echo "       Git LFS not found - files may not download correctly"
+fi
+
+echo "-----> Post-compile hook complete"
