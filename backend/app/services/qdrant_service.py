@@ -142,21 +142,16 @@ class QdrantService:
     ) -> List[Dict]:
         """Find similar users based on embedding"""
         try:
-            # Use query_points for newer versions of qdrant-client
-            from qdrant_client.models import QueryRequest, ScoredPoint
-
-            search_result = self.client.query_points(
+            # Use search method (compatible with qdrant-client 1.7.0+)
+            search_result = self.client.search(
                 collection_name=self.collection_name,
-                query=embedding,
+                query_vector=embedding,
                 limit=limit + 1,  # +1 to account for potential self-match
                 with_payload=True
             )
 
             results = []
-            # Handle both old and new response formats
-            points = search_result.points if hasattr(search_result, 'points') else search_result
-
-            for hit in points:
+            for hit in search_result:
                 # Skip if this is the user themselves
                 if exclude_user_id and str(hit.id) == exclude_user_id:
                     continue
