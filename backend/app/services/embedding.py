@@ -170,6 +170,16 @@ class EmbeddingService:
 
             print("🔄 Loading embeddings (optimized with shared memory)...")
 
+            # Check if file is a Git LFS pointer (not actual file)
+            file_size = self.embeddings_path.stat().st_size
+            if file_size < 1000:  # LFS pointers are ~130 bytes
+                print(f"⚠️  Warning: Embeddings file is too small ({file_size} bytes)")
+                print("This looks like a Git LFS pointer file, not the actual embeddings!")
+                print("Git LFS may not have downloaded the file correctly.")
+                print("Creating dummy embeddings for now...")
+                self._create_dummy_embeddings()
+                return
+
             # Load precomputed embeddings
             with open(self.embeddings_path, "rb") as f:
                 data = pickle.load(f)
