@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authenticateLastFm, createUserEmbedding } from '@/lib/api';
 import { useStore } from '@/lib/store';
 import { Loader2 } from 'lucide-react';
 
-export default function CallbackPage() {
+function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState('Authenticating...');
@@ -80,5 +80,20 @@ export default function CallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-violet-800 to-fuchsia-900 flex items-center justify-center">
+        <div className="glass-card p-12 max-w-md w-full text-center">
+          <Loader2 className="w-16 h-16 text-white mx-auto mb-6 animate-spin" />
+          <h2 className="text-2xl font-bold text-white mb-4">Loading...</h2>
+        </div>
+      </div>
+    }>
+      <CallbackContent />
+    </Suspense>
   );
 }
