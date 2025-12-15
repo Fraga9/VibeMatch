@@ -1,13 +1,8 @@
 <div align="center">
 
 <!-- Add your banner image here -->
-<img 
-  src="/images/vibematch-banner.jpeg" 
-  alt="VibeMatch Banner" 
-  width="1100" 
-  height="267"
-  style="object-fit: cover; object-position: center;"
-/>
+<img src="/images/vibematch-banner.png" alt="VibeMatch Banner" width="840"/>
+
 
 **AI-Powered Music Compatibility Matching**
 
