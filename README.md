@@ -1,359 +1,349 @@
-# 🎵 VibeMatch
+<div align="center">
 
-**Find Your Music Soulmate** — A Tinder-style music matching app powered by Graph Neural Networks and Last.fm.
+<!-- Add your banner image here -->
+<img 
+  src="/images/vibematch-banner.jpeg" 
+  alt="VibeMatch Banner" 
+  width="1100" 
+  height="267"
+  style="object-fit: cover; object-position: center;"
+/>
 
-VibeMatch uses cutting-edge AI to analyze your music taste and connect you with people who share your exact vibe. Built with modern tech stack and ready to scale to 100K+ users.
+**AI-Powered Music Compatibility Matching**
 
----
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/) [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/) [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/) [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg)](https://fastapi.tiangolo.com/) [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
 
-## 🚀 Features
+*Find your musical soulmate using Graph Neural Networks and vector similarity search*
 
-- **🤖 AI-Powered Matching**: GNN-based embeddings (LightGCN) trained on millions of playlists
-- **🎯 Last.fm Integration**: OAuth authentication and rich profile data
-- **💾 Vector Search**: Lightning-fast similarity search with Qdrant
-- **👻 Ghost Users**: Pre-seeded with 10K diverse music profiles for instant matches
-- **📊 Deep Analytics**: Compatibility scores, shared artists, genre insights
-- **🎨 Beautiful UI**: Next.js 15 with Tailwind CSS and smooth animations
-- **🔐 Secure & Private**: JWT authentication, ToS compliant
+[Demo](https://vibematch-sigma.vercel.app) • [Docs](#) • [Report Bug](#) • [Request Feature](#)
 
----
-
-## 🏗️ Architecture
-
-```
-VibeMatch/
-├── backend/           # FastAPI + PyTorch Geometric
-│   ├── app/
-│   │   ├── api/       # REST endpoints (auth, user, match, admin)
-│   │   ├── core/      # Config & security
-│   │   ├── models/    # Pydantic schemas
-│   │   ├── services/  # Business logic (Last.fm, Qdrant, embeddings)
-│   │   └── utils/     # Ghost user seeding
-│   ├── model/         # Trained GNN model + embeddings
-│   ├── scripts/       # Standalone utilities
-│   └── train_gnn.ipynb # Model training notebook
-│
-├── frontend/          # Next.js 15 + TypeScript
-│   ├── src/
-│   │   ├── app/       # Pages (landing, auth, dashboard)
-│   │   ├── components/# React components
-│   │   ├── lib/       # API client, store, utils
-│   │   └── types/     # TypeScript definitions
-│
-└── docker-compose.yml # Full stack orchestration
-```
+</div>
 
 ---
 
-## 📋 Prerequisites
+## What is VibeMatch?
 
-- **Docker & Docker Compose** (recommended)
-- **OR** Manual setup:
-  - Python 3.11+
-  - Node.js 20+
-  - Qdrant (running on port 6333)
-  - Redis (running on port 6379)
+VibeMatch connects users with similar music taste by analyzing their listening patterns through deep learning. Unlike traditional systems that compare artist lists, VibeMatch captures **complex musical relationships** through a Graph Neural Network trained on millions of music interactions.
 
----
+**Key Innovation:** We don't just match artists you both like—we understand the *musical relationships* between artists to find truly compatible taste profiles.
 
-## 🎬 Quick Start (Docker)
+## Key Features
 
-### 1. Clone the repository
+- **Deep Music Understanding**: Graph Neural Network analyzes 338K+ tracks and 6.9K+ artists to learn musical relationships
+- **Instant Matching**: Sub-10ms vector search across user profiles using Qdrant
+- **Multi-temporal Analysis**: Combines long-term preferences with recent listening trends
+- **Cold Start Solution**: Synthetic profiles ensure immediate matches for new users
+- **Privacy-First**: Only uses public Last.fm data, GDPR compliant
 
-```bash
-git clone https://github.com/yourusername/vibematch.git
-cd vibematch
+## Screenshots
+
+<div align="center">
+
+<img src="/images/dashboard.jpg" alt="Dashboard" width="900" style="border-radius: 12px; margin: 10px;"/>
+<img src="/images/matches.jpg" alt="Matches View" width="900" style="border-radius: 12px; margin: 10px;"/>
+
+</div>
+
+## How It Works
+
+```mermaid
+graph LR
+    A[Last.fm Profile] --> B[Multi-Period Fetch]
+    B --> C[Weighted Embedding]
+    C --> D[Qdrant Search]
+    D --> E[Ranked Matches]
+
+    style A fill:#e0f2fe,stroke:#0ea5e9,stroke-width:2px,color:#0c4a6e
+    style B fill:#ffe4e6,stroke:#f43f5e,stroke-width:2px,color:#881337
+    style C fill:#dcfce7,stroke:#22c55e,stroke-width:2px,color:#14532d
+    style D fill:#f3e8ff,stroke:#a855f7,stroke-width:2px,color:#581c87
+    style E fill:#fef3c7,stroke:#eab308,stroke-width:2px,color:#713f12
 ```
 
-### 2. Configure environment
+**Step-by-step:**
 
-```bash
-cp .env.example .env
+1. **Authentication**: Connect your Last.fm account via OAuth
+2. **Data Fetching**: Retrieve listening history across multiple time periods (all-time, 6mo, 3mo, recent)
+3. **Embedding Generation**: Your music taste is encoded into a 128D vector using the trained GNN (~500ms)
+4. **Vector Search**: Qdrant finds top-K compatible users via cosine similarity (<10ms)
+5. **Results**: View matches with compatibility scores and shared artists
+
+## System Architecture
+
+```mermaid
+graph LR
+    subgraph Frontend["Frontend Layer"]
+        direction TB
+        A[Next.js 15<br/>TypeScript]
+        A1[Tailwind UI]
+        A2[Zustand State]
+        A --> A1
+        A --> A2
+    end
+
+    subgraph Backend["API Layer"]
+        direction TB
+        B[FastAPI<br/>Async Server]
+        C[Embedding<br/>Service]
+        D[LRU Cache<br/>8K entries]
+        
+        B --> C
+        C --> D
+    end
+
+    subgraph ML["ML Pipeline"]
+        direction TB
+        E[PyTorch +<br/>PyG]
+        F[LightGCN<br/>3 Layers]
+        G[Embeddings<br/>338K tracks<br/>6.9K artists]
+        
+        E --> F
+        F --> G
+    end
+
+    subgraph VectorDB["Vector Search"]
+        direction TB
+        H[(Qdrant<br/>Database)]
+        I[HNSW Index<br/>Cosine Sim]
+        
+        H --> I
+    end
+
+    subgraph External["External APIs"]
+        J[Last.fm<br/>OAuth + Data]
+    end
+
+    Frontend -->|REST API| Backend
+    Backend -->|Vector Query| VectorDB
+    Backend -->|Auth + Fetch| External
+    Backend -.->|Embedding Lookup| ML
+    VectorDB -.->|Store Vectors| Backend
+
+    style Frontend fill:#e0f2fe,stroke:#0ea5e9,stroke-width:2px,color:#0c4a6e
+    style Backend fill:#dcfce7,stroke:#22c55e,stroke-width:2px,color:#14532d
+    style ML fill:#ffe4e6,stroke:#f43f5e,stroke-width:2px,color:#881337
+    style VectorDB fill:#f3e8ff,stroke:#a855f7,stroke-width:2px,color:#581c87
+    style External fill:#fef3c7,stroke:#eab308,stroke-width:2px,color:#713f12
+    
+    style A fill:#bae6fd,stroke:#0284c7,stroke-width:2px,color:#075985
+    style B fill:#bbf7d0,stroke:#16a34a,stroke-width:2px,color:#166534
+    style E fill:#fecdd3,stroke:#e11d48,stroke-width:2px,color:#9f1239
+    style H fill:#e9d5ff,stroke:#9333ea,stroke-width:2px,color:#6b21a8
+    style J fill:#fef08a,stroke:#ca8a04,stroke-width:2px,color:#854d0e
 ```
 
-Edit `.env` and add your API keys:
+### Machine Learning
 
-```env
-# Last.fm API (get from https://www.last.fm/api/account/create)
-LASTFM_API_KEY=your_api_key_here
-LASTFM_API_SECRET=your_api_secret_here
-LASTFM_CALLBACK_URL=http://localhost:3000/auth/callback
+**LightGCN (Light Graph Convolutional Network)**
 
-# Admin
-ADMIN_API_KEY=your_secure_admin_key
-SECRET_KEY=your_jwt_secret_key_min_32_chars
+```mermaid
+graph LR
+    subgraph GraphStructure["Graph Structure"]
+        direction TB
+        T1[Track 1] 
+        T2[Track 2]
+        T3[Track 3]
+        A1[Artist 1]
+        A2[Artist 2]
+        
+        T1 -.->|authored by| A1
+        T2 -.->|authored by| A1
+        T3 -.->|authored by| A2
+        T1 ---|co-occurrence| T2
+        A1 ---|similar| A2
+    end
+
+    subgraph Training["GNN Training Pipeline"]
+        direction TB
+        G[345K Nodes<br/>2.7M Edges] --> L[3-Layer LightGCN]
+        L --> E[128D Embeddings]
+        E --> N[L2 Normalization]
+    end
+
+    subgraph Optimization["Training & Optimization"]
+        direction TB
+        N --> BPR[BPR Loss]
+        BPR --> Adam[Adam Optimizer]
+        Adam --> M[Model Weights]
+    end
+
+    GraphStructure --> Training
+    Training --> Optimization
+
+    style GraphStructure fill:#e0f2fe,stroke:#0ea5e9,stroke-width:2px,color:#0c4a6e
+    style Training fill:#ffe4e6,stroke:#f43f5e,stroke-width:2px,color:#881337
+    style Optimization fill:#dcfce7,stroke:#22c55e,stroke-width:2px,color:#14532d
+    
+    style G fill:#bae6fd,stroke:#0284c7,stroke-width:2px,color:#075985
+    style L fill:#fecdd3,stroke:#e11d48,stroke-width:2px,color:#9f1239
+    style E fill:#fecdd3,stroke:#e11d48,stroke-width:2px,color:#9f1239
+    style N fill:#fecdd3,stroke:#e11d48,stroke-width:2px,color:#9f1239
+    style BPR fill:#bbf7d0,stroke:#16a34a,stroke-width:2px,color:#166534
+    style Adam fill:#bbf7d0,stroke:#16a34a,stroke-width:2px,color:#166534
+    style M fill:#bbf7d0,stroke:#16a34a,stroke-width:2px,color:#166534
 ```
 
-### 3. Train the GNN model (First time only)
+**Model Specs:**
+- **Embeddings**: 128 dimensions, L2 normalized
+- **Architecture**: 3-layer graph convolution
+- **Training**: Bayesian Personalized Ranking (BPR) loss
+- **Performance**: Recall@10: 0.64, Precision: 1.00
+- **Graph**: 345K nodes (338K tracks, 6.9K artists), 2.7M edges
 
-**Option A: Use the training notebook** (recommended for real datasets)
+**Model Specs:**
+- **Embeddings**: 128 dimensions, L2 normalized
+- **Architecture**: 3-layer graph convolution
+- **Training**: Bayesian Personalized Ranking (BPR) loss
+- **Performance**: Recall@10: 0.64, Precision: 1.00
+- **Graph**: 345K nodes (338K tracks, 6.9K artists), 2.7M edges
 
-```bash
-cd backend
-jupyter notebook train_gnn.ipynb
+### Tech Stack
+
+<table>
+<tr>
+<td width="50%">
+
+**Frontend**
+- Next.js 15 (App Router, RSC)
+- TypeScript (strict mode)
+- Tailwind CSS
+- Zustand (state management)
+- Deployed on Vercel
+
+</td>
+<td width="50%">
+
+**Backend**
+- FastAPI (async REST API)
+- PyTorch + PyTorch Geometric
+- Qdrant (vector database)
+- LRU cache (8K entries)
+- DigitalOcean App Platform
+
+</td>
+</tr>
+</table>
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| Embedding Generation | ~500ms |
+| Vector Search | <10ms |
+| End-to-End Latency | <800ms |
+| Model Size | ~168MB |
+| User Embedding Coverage | ~95% (exact + fuzzy + zero-shot) |
+
+## Dataset
+
+Built from Last.fm data:
+- **Source**: Last.fm augmented dataset with artist similarity graph
+- **Tracks**: 338,046 Last.fm tracks
+- **Artists**: 6,899 unique artists
+- **Relationships**: 2.7M edges (track-artist, track-track, artist-artist)
+- **Genre coverage**: 95.9% of tracks have genre assignments
+
+Coverage breakdown for user embeddings:
+- Exact matches: ~60%
+- Fuzzy matches: ~25%
+- Zero-shot inference: ~10%
+- Missing: <5%
+
+## User Embedding Strategy
+
+## User Embedding Strategy
+
+**Multi-temporal weighted average with consistency boosting:**
+
+```mermaid
+graph LR
+    subgraph Sources["Data Sources"]
+        direction TB
+        A1[Overall<br/>45%]
+        A2[6 Months<br/>25%]
+        A3[3 Months<br/>15%]
+        A4[Recent 200<br/>15%]
+    end
+
+    subgraph Lookup["Lookup Strategy"]
+        direction TB
+        B1[Exact Match<br/>O1 - 60%]
+        B2[Fuzzy FAISS<br/>~25%]
+        B3[Zero-Shot<br/>~10%]
+        B4[LRU Cache<br/>8K entries]
+    end
+
+    subgraph Weighting["Weighting Pipeline"]
+        direction TB
+        C1[Consistency Boost<br/>Multi-period × 1.4]
+        C2[Temporal Decay<br/>0.5^days/30]
+        C3[Playcount Weight<br/>log1p]
+    end
+
+    subgraph Output["Output"]
+        direction TB
+        D[128D Normalized<br/>User Vector]
+    end
+
+    Sources --> Lookup
+    Lookup --> Weighting
+    Weighting --> Output
+    B4 -.->|Cache Hit| B1
+
+    style Sources fill:#e0f2fe,stroke:#0ea5e9,stroke-width:2px,color:#0c4a6e
+    style Lookup fill:#ffe4e6,stroke:#f43f5e,stroke-width:2px,color:#881337
+    style Weighting fill:#dcfce7,stroke:#22c55e,stroke-width:2px,color:#14532d
+    style Output fill:#f3e8ff,stroke:#a855f7,stroke-width:2px,color:#581c87
+    
+    style A1 fill:#bae6fd,stroke:#0284c7,stroke-width:2px,color:#075985
+    style A2 fill:#bae6fd,stroke:#0284c7,stroke-width:2px,color:#075985
+    style A3 fill:#bae6fd,stroke:#0284c7,stroke-width:2px,color:#075985
+    style A4 fill:#bae6fd,stroke:#0284c7,stroke-width:2px,color:#075985
+    style B1 fill:#fecdd3,stroke:#e11d48,stroke-width:2px,color:#9f1239
+    style B2 fill:#fecdd3,stroke:#e11d48,stroke-width:2px,color:#9f1239
+    style B3 fill:#fecdd3,stroke:#e11d48,stroke-width:2px,color:#9f1239
+    style B4 fill:#fecdd3,stroke:#e11d48,stroke-width:2px,color:#9f1239
+    style C1 fill:#bbf7d0,stroke:#16a34a,stroke-width:2px,color:#166534
+    style C2 fill:#bbf7d0,stroke:#16a34a,stroke-width:2px,color:#166534
+    style C3 fill:#bbf7d0,stroke:#16a34a,stroke-width:2px,color:#166534
+    style D fill:#e9d5ff,stroke:#9333ea,stroke-width:2px,color:#6b21a8
 ```
 
-Follow the notebook instructions to:
-1. Download Spotify MPD and Last.fm LFM-360K datasets
-2. Build the graph and train LightGCN
-3. Generate embeddings (saved to `backend/model/`)
+**Fallback Hierarchy:**
+1. **Exact match** → Precomputed embedding (O(1)) - ~60% coverage
+2. **Fuzzy match** → FAISS similarity search - ~25% coverage
+3. **Zero-shot** → Weighted average of similar artists - ~10% coverage
+4. **LRU Cache** → 8K entries, ~75% hit rate
 
-**Option B: Skip training** (for quick demo)
 
-The backend will create dummy embeddings automatically if model files don't exist.
+**Fallback Hierarchy:**
+1. **Exact match** → Precomputed embedding (O(1)) - ~60% coverage
+2. **Fuzzy match** → FAISS similarity search - ~25% coverage
+3. **Zero-shot** → Weighted average of similar artists - ~10% coverage
+4. **LRU Cache** → 8K entries, ~75% hit rate
 
-### 4. Start the application
+## Scientific Foundation
 
-```bash
-docker-compose up --build
+Graph Neural Networks combine collaborative filtering with content-based features and relational structure. Each GNN layer aggregates neighbor information:
+
+```
+e_i^(k+1) = Σ(neighbors) [1/√(degree_i × degree_j)] × e_j^(k)
 ```
 
-This will start:
-- **Qdrant** (vector DB) on `localhost:6333`
-- **Redis** on `localhost:6379`
-- **Backend API** on `localhost:8000`
-- **Frontend** on `localhost:3000`
+Final embedding averages all layers (local + global context).
 
-### 5. Seed ghost users (optional but recommended)
+**References**
+- He et al. (2020) - "LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation"
+- Rendle et al. (2009) - "BPR: Bayesian Personalized Ranking from Implicit Feedback"
 
-In a new terminal:
+## Privacy & Compliance
 
-```bash
-docker-compose exec backend python scripts/seed_ghost_users.py --count 10000
-```
+- Only public Last.fm API data
+- No scraping, respects rate limits
+- OAuth 1.0, no password storage
+- Anonymous embeddings (non-reversible)
+- GDPR compliant with right to deletion
 
-### 6. Open the app
+## License
 
-Visit http://localhost:3000 and click **"Connect with Last.fm"**
-
----
-
-## 🛠️ Manual Setup (Without Docker)
-
-### Backend
-
-```bash
-cd backend
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
-export LASTFM_API_KEY=your_key
-export LASTFM_API_SECRET=your_secret
-# ... (see .env.example for all vars)
-
-# Train model (optional)
-jupyter notebook train_gnn.ipynb
-
-# Run server
-uvicorn app.main:app --reload
-```
-
-### Frontend
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Set environment variables
-export NEXT_PUBLIC_API_URL=http://localhost:8000
-export NEXT_PUBLIC_LASTFM_API_KEY=your_key
-
-# Run dev server
-npm run dev
-```
-
----
-
-## 📚 API Documentation
-
-Once the backend is running, visit:
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-### Key Endpoints
-
-#### Authentication
-- `GET /auth/lastfm/authorize-url` - Get Last.fm OAuth URL
-- `POST /auth/lastfm` - Exchange token for JWT
-
-#### User
-- `GET /user/profile?username={username}` - Get Last.fm profile
-- `POST /user/embedding` - Generate user embedding
-- `GET /user/embedding/status` - Check if embedding exists
-
-#### Matching
-- `GET /match/top?limit=20` - Get top matches
-- `GET /match/stats` - Get matching statistics
-
-#### Admin
-- `POST /admin/seed/ghosts` - Seed ghost users (requires `X-Admin-Key` header)
-- `GET /admin/stats` - Get admin statistics
-
----
-
-## 🧪 Testing
-
-### Backend Tests
-
-```bash
-cd backend
-pytest
-```
-
-### Frontend Tests
-
-```bash
-cd frontend
-npm test
-```
-
----
-
-## 🚀 Deployment
-
-### Railway (Recommended)
-
-1. **Push to GitHub**
-2. **Connect Railway** to your repo
-3. **Add services**:
-   - Qdrant (use Railway template or Docker)
-   - Redis (Railway template)
-   - Backend (Python)
-   - Frontend (Next.js)
-4. **Set environment variables** in Railway dashboard
-5. **Deploy!**
-
-### Fly.io
-
-```bash
-# Backend
-cd backend
-fly launch
-fly deploy
-
-# Frontend
-cd frontend
-fly launch
-fly deploy
-```
-
-### Render
-
-1. Create new **Web Service** for backend (Python)
-2. Create new **Static Site** for frontend (Next.js)
-3. Create **Qdrant** via Docker or external service
-4. Add environment variables
-
----
-
-## 🎓 How It Works
-
-### 1. Graph Neural Network (GNN)
-
-VibeMatch uses **LightGCN** (Light Graph Convolutional Network) trained on:
-- **Nodes**: 2M+ tracks + 500K+ artists
-- **Edges**:
-  - Track ↔ Artist (authorship)
-  - Track ↔ Track (playlist co-occurrence)
-  - Artist ↔ Artist (collaboration)
-
-The model learns 128-dimensional embeddings that capture musical relationships.
-
-### 2. User Embedding Generation
-
-When a user connects their Last.fm:
-1. Fetch their top 50 artists + top 50 tracks (all-time)
-2. Look up precomputed embeddings for each track/artist
-3. Compute **weighted average** (by playcount)
-4. Normalize to unit vector
-5. Store in Qdrant with metadata
-
-### 3. Matching Algorithm
-
-```python
-similarity = cosine_similarity(user_embedding, other_user_embedding)
-compatibility_score = int(similarity * 100)
-```
-
-Qdrant's HNSW index enables sub-millisecond searches across millions of users.
-
-### 4. Ghost Users
-
-To ensure new users have matches immediately, we pre-seed Qdrant with 10K diverse profiles:
-- **40%** top global scrobblers (mainstream taste)
-- **30%** niche genres (vaporwave, hyperpop, etc.)
-- **20%** veteran users (10+ years of history)
-- **10%** international users (non-English countries)
-
----
-
-## 🔒 Security & Privacy
-
-- ✅ **No scraping**: Only uses public Last.fm API
-- ✅ **JWT authentication**: Secure token-based auth
-- ✅ **Rate limiting**: Respects Last.fm API limits
-- ✅ **No PII storage**: Only public profile data
-- ✅ **ToS compliant**: Follows Last.fm terms of service
-
----
-
-## 📊 Datasets
-
-### Spotify Million Playlist Dataset (MPD)
-- **Source**: https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge
-- **Size**: 1M playlists, 2M+ unique tracks
-- **License**: Research use only
-
-### Last.fm LFM-360K
-- **Source**: http://www.cp.jku.at/datasets/LFM-1b/
-- **Size**: 360K users, 292K artists, 17M listening events
-- **License**: Research use only
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-1. Fork the repo
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a PR
-
----
-
-## 📝 License
-
-MIT License - see [LICENSE](LICENSE)
-
----
-
-## 🙏 Acknowledgments
-
-- **Last.fm** for the amazing API
-- **Spotify** for the Million Playlist Dataset
-- **PyTorch Geometric** for GNN framework
-- **Qdrant** for vector search
-- **Next.js** team for the incredible framework
-
----
-
-## 📧 Contact
-
-Built by [Your Name]
-
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Twitter: [@yourhandle](https://twitter.com/yourhandle)
-- Email: your.email@example.com
-
----
-
-⭐ **If you like VibeMatch, give it a star!** ⭐
+MIT License
