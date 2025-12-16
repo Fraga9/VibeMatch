@@ -1,0 +1,21 @@
+{
+  "name": "VibeMatch - AI-Powered Music Matching",
+  "short_name": "VibeMatch",
+  "description": "Find your musical soulmate using Graph Neural Networks and vector similarity search",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050a0e",
+  "theme_color": "#38bdf8",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vibes.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["music", "entertainment", "social"],
+  "lang": "en-US",
+  "dir": "ltr"
+}

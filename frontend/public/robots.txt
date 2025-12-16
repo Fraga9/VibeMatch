@@ -1,0 +1,9 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /auth/
+
+# Sitemap
+Sitemap: https://vibematch-sigma.vercel.app/sitemap.xml

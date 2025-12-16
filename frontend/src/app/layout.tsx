@@ -1,9 +1,75 @@
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/next';
+import { Instrument_Serif, Outfit } from 'next/font/google';
 import './globals.css';
 
+// Font optimization with next/font
+const instrumentSerif = Instrument_Serif({
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const outfit = Outfit({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-body',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'VibeMatch - Find Your Music Soulmate',
-  description: 'Discover people who share your exact music taste using AI-powered matching',
+  title: 'VibeMatch - AI-Powered Music Compatibility Matching',
+  description: 'Find your musical soulmate using Graph Neural Networks and vector similarity search. Connect with users who share your exact music taste through deep learning analysis.',
+  keywords: ['music', 'matching', 'Last.fm', 'AI', 'machine learning', 'GNN', 'music compatibility', 'taste matching'],
+  authors: [{ name: 'VibeMatch' }],
+  creator: 'VibeMatch',
+  publisher: 'VibeMatch',
+  metadataBase: new URL('https://vibematch-sigma.vercel.app'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://vibematch-sigma.vercel.app',
+    title: 'VibeMatch - AI-Powered Music Compatibility Matching',
+    description: 'Find your musical soulmate using Graph Neural Networks. Connect with users who share your exact music taste.',
+    siteName: 'VibeMatch',
+    images: [
+      {
+        url: '/images/vibematch-banner.jpeg',
+        width: 1200,
+        height: 630,
+        alt: 'VibeMatch - AI-Powered Music Matching',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'VibeMatch - AI-Powered Music Compatibility Matching',
+    description: 'Find your musical soulmate using Graph Neural Networks and vector similarity search.',
+    images: ['/images/vibematch-banner.jpeg'],
+    creator: '@vibematch',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: '/vibes.svg',
+    shortcut: '/vibes.svg',
+    apple: '/vibes.svg',
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -12,16 +78,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap" 
-          rel="stylesheet" 
-        />
-      </head>
-      <body style={{ fontFamily: "'Outfit', -apple-system, sans-serif" }}>{children}</body>
+    <html lang="en" className={`${instrumentSerif.variable} ${outfit.variable}`}>
+      <body className={outfit.className}>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
