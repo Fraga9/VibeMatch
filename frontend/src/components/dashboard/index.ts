@@ -1,4 +1,3 @@
-export { DashboardHeader } from './DashboardHeader';
 export { ProfileCard } from './ProfileCard';
 export { NowPlayingCard } from './NowPlayingCard';
 export { QuickStatsCards } from './QuickStatsCards';

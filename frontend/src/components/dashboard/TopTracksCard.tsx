@@ -16,7 +16,7 @@ interface TopTracksCardProps {
 
 export function TopTracksCard({ tracks }: TopTracksCardProps) {
   return (
-    <div className="col-span-12 lg:col-span-6 bento-card p-6">
+    <div className="col-span-12 md:col-span-12 lg:col-span-8 bento-card p-6">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5" style={{ color: '#22d3ee' }} />

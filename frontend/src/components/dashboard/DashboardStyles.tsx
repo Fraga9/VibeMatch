@@ -27,39 +27,18 @@ export function DashboardStyles() {
       }
 
       .bento-card {
-        background: linear-gradient(135deg, rgba(14, 165, 233, 0.06) 0%, rgba(6, 182, 212, 0.02) 100%);
+        background: rgba(255, 255, 255, 0.03);
         backdrop-filter: blur(20px);
-        border: 1px solid rgba(14, 165, 233, 0.1);
-        border-radius: 24px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        transition: background 0.2s ease;
         position: relative;
         overflow: hidden;
       }
 
-      .bento-card::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        border-radius: 24px;
-        padding: 1px;
-        background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, transparent 50%, rgba(6, 182, 212, 0.1) 100%);
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 0.4s ease;
-      }
-
-      .bento-card:hover::before {
-        opacity: 1;
-      }
-
       .bento-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(14, 165, 233, 0.2);
-        box-shadow: 0 20px 40px -20px rgba(14, 165, 233, 0.15);
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .gradient-text {
@@ -108,26 +87,26 @@ export function DashboardStyles() {
       .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
       .track-row {
-        transition: all 0.3s ease;
+        transition: background 0.2s ease;
       }
-      
+
       .track-row:hover {
-        background: rgba(14, 165, 233, 0.06);
+        background: rgba(255, 255, 255, 0.03);
       }
 
       .artist-card {
         position: relative;
         padding: 1rem;
-        border-radius: 16px;
-        background: rgba(14, 165, 233, 0.04);
-        border: 1px solid rgba(14, 165, 233, 0.08);
-        transition: all 0.3s ease;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
       .artist-card:hover {
-        background: rgba(14, 165, 233, 0.08);
-        border-color: rgba(14, 165, 233, 0.15);
-        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.1);
       }
 
       .rank-badge {

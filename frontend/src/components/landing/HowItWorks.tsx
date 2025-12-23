@@ -15,9 +15,11 @@ const HowItWorks = forwardRef<HTMLElement>((_, ref) => {
   return (
     <section
       ref={ref}
+      className="px-6 lg:px-10"
       style={{
-        padding: '6rem 2rem',
-        maxWidth: '1200px',
+        paddingTop: '6rem',
+        paddingBottom: '6rem',
+        maxWidth: '1400px',
         margin: '0 auto'
       }}
     >

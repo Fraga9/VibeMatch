@@ -3,11 +3,11 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   BackgroundEffects,
-  Navigation,
   HeroSection,
   HowItWorks,
   AboutSection
 } from '@/components/landing';
+import { Header } from '@/components/shared';
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
@@ -19,11 +19,23 @@ export default function LandingPage() {
   }, []);
 
   const scrollToHowItWorks = () => {
-    howItWorksRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const headerOffset = 80;
+    const element = howItWorksRef.current;
+    if (element) {
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
   };
 
   const scrollToAbout = () => {
-    aboutRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const headerOffset = 80;
+    const element = aboutRef.current;
+    if (element) {
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
   };
 
   if (!mounted) return null;
@@ -36,13 +48,39 @@ export default function LandingPage() {
         <div className="noise" />
       </div>
 
+      <Header
+        variant="landing"
+        rightContent={
+          <div className="flex items-center gap-1 md:gap-2">
+            <button
+              onClick={scrollToHowItWorks}
+              className="nav-link"
+              style={{
+                minWidth: '48px',
+                minHeight: '48px',
+                padding: '0.75rem 1rem',
+                fontSize: '0.8125rem'
+              }}
+            >
+              How it Works
+            </button>
+            <button
+              onClick={scrollToAbout}
+              className="nav-link"
+              style={{
+                minWidth: '48px',
+                minHeight: '48px',
+                padding: '0.75rem 1rem',
+                fontSize: '0.8125rem'
+              }}
+            >
+              About
+            </button>
+          </div>
+        }
+      />
+
       <div style={{ position: 'relative', zIndex: 10 }}>
-        <div className="w-full max-w-[1400px] mx-auto px-5 md:px-8">
-          <Navigation 
-            onHowItWorksClick={scrollToHowItWorks} 
-            onAboutClick={scrollToAbout}
-          />
-        </div>
         <HeroSection onScrollToHowItWorks={scrollToHowItWorks} />
         <HowItWorks ref={howItWorksRef} />
         <AboutSection ref={aboutRef} />

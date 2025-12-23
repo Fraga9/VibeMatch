@@ -21,9 +21,11 @@ const AboutSection = forwardRef<HTMLElement>((_, ref) => {
   return (
     <section
       ref={ref}
+      className="px-6 lg:px-10"
       style={{
-        padding: '6rem 2rem 3rem',
-        maxWidth: '1200px',
+        paddingTop: '6rem',
+        paddingBottom: '3rem',
+        maxWidth: '1400px',
         margin: '0 auto',
         borderTop: '1px solid var(--color-border)'
       }}
@@ -82,15 +84,15 @@ const AboutSection = forwardRef<HTMLElement>((_, ref) => {
               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>Creator & Developer</p>
             </div>
           </div>
-          
+
           <p style={{
             fontSize: '0.9375rem',
             color: 'var(--color-text-muted)',
             lineHeight: 1.7,
             marginBottom: '1.5rem'
           }}>
-            Music enthusiast and developer passionate about connecting people through shared 
-            listening experiences. VibeMatch was born from the idea that music taste reveals 
+            Music enthusiast and developer passionate about connecting people through shared
+            listening experiences. VibeMatch was born from the idea that music taste reveals
             something deeper about who we are.
           </p>
 
@@ -141,9 +143,9 @@ const AboutSection = forwardRef<HTMLElement>((_, ref) => {
             lineHeight: 1.7,
             marginBottom: '1.5rem'
           }}>
-            VibeMatch uses Graph Neural Networks trained on the Million Playlist Dataset 
-            combined with Last.fm listening data to create meaningful connections between 
-            music lovers. The AI learns not just what you listen to, but how your taste 
+            VibeMatch uses Graph Neural Networks trained on the Million Playlist Dataset
+            combined with Last.fm listening data to create meaningful connections between
+            music lovers. The AI learns not just what you listen to, but how your taste
             evolves over time.
           </p>
 
@@ -186,7 +188,7 @@ const AboutSection = forwardRef<HTMLElement>((_, ref) => {
         </div>
       </div>
 
-      
+
 
       {/* Bottom Footer */}
       <div style={{
@@ -199,17 +201,15 @@ const AboutSection = forwardRef<HTMLElement>((_, ref) => {
         borderTop: '1px solid rgba(56, 189, 248, 0.08)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '8px',
-            background: 'linear-gradient(135deg, #38bdf8 0%, #06b6d4 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            <Music size={16} color="#050a0e" />
-          </div>
+          <img
+            src="/vibes.svg"
+            alt="VibeMatch Logo"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px'
+            }}
+          />
           <span style={{
             fontFamily: 'var(--font-display)',
             fontSize: '1.125rem',

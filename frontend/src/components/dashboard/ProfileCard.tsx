@@ -24,7 +24,7 @@ export function ProfileCard({ user, storedUsername, matchesCount }: ProfileCardP
     : null;
 
   return (
-    <div className="col-span-12 lg:col-span-4 bento-card p-6">
+    <div className="col-span-12 md:col-span-6 lg:col-span-3 bento-card p-6">
       <div className="flex flex-col h-full">
         {/* Avatar & Name */}
         <div className="flex items-start gap-4 mb-6">

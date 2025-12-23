@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Headphones, Loader2, AlertCircle, ChevronDown } from 'lucide-react';
+import { ArrowRight, Loader2, AlertCircle, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import FloatingCards from './FloatingCards';
 
@@ -56,7 +56,7 @@ export default function HeroSection({ onScrollToHowItWorks }: HeroSectionProps) 
   };
 
   return (
-    <section 
+    <section
       className="px-5 py-8 md:p-8"
       style={{
         minHeight: 'calc(100vh - 180px)',
@@ -84,7 +84,7 @@ export default function HeroSection({ onScrollToHowItWorks }: HeroSectionProps) 
         </h1>
 
         {/* Description */}
-        <p 
+        <p
           className="text-lg md:text-xl mb-8 md:mb-10"
           style={{
             color: 'var(--color-text-muted)',
@@ -152,23 +152,28 @@ export default function HeroSection({ onScrollToHowItWorks }: HeroSectionProps) 
         </form>
 
         {/* Social Proof */}
-        <div 
+        <div
           className="mt-8 md:mt-12 pt-8 border-t flex flex-wrap items-center gap-4"
           style={{
             borderColor: 'var(--color-border)'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div
+            {[
+              'https://lastfm.freetls.fastly.net/i/u/avatar170s/34def896182778dcccbb0becc2b3c3aa.gif',
+              'https://lastfm.freetls.fastly.net/i/u/avatar170s/29a353e4cad5024c03d8f8248567bdb3.png',
+              'https://lastfm.freetls.fastly.net/i/u/avatar170s/d58022fe943df067af5192d618973e31.png',
+              'https://lastfm.freetls.fastly.net/i/u/avatar170s/1f05d5fea7dce7b34d56fce270464311.png'
+            ].map((avatarUrl, i) => (
+              <img
                 key={i}
+                src={avatarUrl}
+                alt={`Music lover ${i + 1}`}
                 className="match-avatar"
                 style={{
-                  background: `linear-gradient(135deg, hsl(${190 + i * 10}, 80%, ${50 + i * 5}%) 0%, hsl(${180 + i * 10}, 70%, ${40 + i * 5}%) 100%)`
+                  objectFit: 'cover'
                 }}
-              >
-                <Headphones size={14} color="white" />
-              </div>
+              />
             ))}
           </div>
           <div>
@@ -181,7 +186,7 @@ export default function HeroSection({ onScrollToHowItWorks }: HeroSectionProps) 
       <FloatingCards />
 
       {/* Scroll indicator - Wrapper Strategy for proper centering + animation */}
-      <div 
+      <div
         role="button"
         tabIndex={0}
         aria-label="Scroll to how it works section"
@@ -198,10 +203,10 @@ export default function HeroSection({ onScrollToHowItWorks }: HeroSectionProps) 
       >
         {/* Child handles the bounce animation */}
         <div className="scroll-indicator flex flex-col items-center gap-2">
-          <span 
+          <span
             className="text-xs md:text-sm"
-            style={{ 
-              color: 'var(--color-text-muted)', 
+            style={{
+              color: 'var(--color-text-muted)',
               whiteSpace: 'nowrap',
               textAlign: 'center',
               textShadow: '0 2px 4px rgba(0,0,0,0.5)'

@@ -5,17 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { getTopMatches, getMatchingStats, getUserProfile } from '@/lib/api';
 import {
-  DashboardHeader,
   ProfileCard,
   NowPlayingCard,
   QuickStatsCards,
-  TopArtistsCard,
-  TopTracksCard,
   MatchesSection,
   DashboardStyles,
   DashboardBackground,
   LoadingState,
 } from '@/components/dashboard';
+import { Header } from '@/components/shared';
+import { LogOut } from 'lucide-react';
+import { formatNumber } from '@/lib/utils';
 
 interface ExtendedTrack {
   name: string;
@@ -98,15 +98,56 @@ export default function DashboardPage() {
 
         {/* Content */}
         <div className="relative z-10">
-          <DashboardHeader 
-            user={user} 
-            username={storedUsername} 
-            onLogout={handleLogout} 
+          <Header
+            variant="dashboard"
+            rightContent={
+              <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-3 px-4 py-2 rounded-full" style={{
+                  background: 'rgba(14, 165, 233, 0.06)',
+                  border: '1px solid rgba(14, 165, 233, 0.1)'
+                }}>
+                  <div className="w-8 h-8 rounded-full overflow-hidden" style={{
+                    background: 'rgba(14, 165, 233, 0.2)'
+                  }}>
+                    {user?.image ? (
+                      <img src={user.image} alt="User" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ color: '#0ea5e9' }}>
+                        {storedUsername[0]?.toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: '#e8f4f8' }}>{user?.real_name || storedUsername}</p>
+                    <p className="text-[11px] font-medium" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>{formatNumber(user?.playcount || 0)} scrobbles</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="p-2.5 rounded-xl transition-all"
+                  style={{
+                    color: 'rgba(232, 244, 248, 0.4)',
+                    background: 'rgba(255, 255, 255, 0.02)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#f87171';
+                    e.currentTarget.style.background = 'rgba(248, 113, 113, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = 'rgba(232, 244, 248, 0.4)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                  }}
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
+            }
           />
 
           <div className="px-6 lg:px-10 py-8">
             {/* Bento Grid Layout */}
-            <div className="grid grid-cols-12 gap-4 lg:gap-5 max-w-[1600px] mx-auto">
+            <div className="grid grid-cols-12 gap-4 lg:gap-5 max-w-[1400px] mx-auto">
               
               <ProfileCard 
                 user={user} 
@@ -116,14 +157,10 @@ export default function DashboardPage() {
 
               <NowPlayingCard recentTracks={user?.recent_tracks || []} />
 
-              <QuickStatsCards 
-                playcount={user?.playcount || 0} 
-                registered={user?.registered} 
+              <QuickStatsCards
+                playcount={user?.playcount || 0}
+                registered={user?.registered}
               />
-
-              <TopArtistsCard artists={user?.top_artists || []} />
-
-              <TopTracksCard tracks={user?.top_tracks || []} />
 
               <MatchesSection matches={matches} />
 
