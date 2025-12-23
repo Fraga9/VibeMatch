@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     siteName: 'VibeMatch',
     images: [
       {
-        url: '/images/vibematch-banner.jpeg',
+        url: '/images/vibematch-banner.png',
         width: 1200,
         height: 630,
         alt: 'VibeMatch - AI-Powered Music Matching',
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'VibeMatch - AI-Powered Music Compatibility Matching',
     description: 'Find your musical soulmate using Graph Neural Networks and vector similarity search.',
-    images: ['/images/vibematch-banner.jpeg'],
+    images: ['/images/vibematch-banner.png'],
     creator: '@vibematch',
   },
   robots: {
