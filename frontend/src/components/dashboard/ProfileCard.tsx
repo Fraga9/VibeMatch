@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Calendar, ExternalLink } from 'lucide-react';
+import { MapPin, Calendar, ExternalLink, Music2, Users, Disc } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 
 interface ProfileCardProps {
@@ -23,79 +23,58 @@ export function ProfileCard({ user, storedUsername, matchesCount }: ProfileCardP
     ? new Date(user.registered * 1000).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) 
     : null;
 
+  const profileImg = user?.image || `https://ui-avatars.com/api/?name=${storedUsername}&background=0a1218&color=0ea5e9`;
+
   return (
-    <div className="col-span-12 md:col-span-6 lg:col-span-3 bento-card p-6">
-      <div className="flex flex-col h-full">
-        {/* Avatar & Name */}
-        <div className="flex items-start gap-4 mb-6">
-          <div className="relative flex-shrink-0">
-            <div className="w-20 h-20 rounded-2xl p-[2px]" style={{
-              background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)'
-            }}>
-              <img 
-                src={user?.image || `https://ui-avatars.com/api/?name=${storedUsername}&background=0a1218&color=0ea5e9`} 
-                alt="Profile" 
-                className="w-full h-full object-cover rounded-[14px]"
-                style={{ background: '#0a1218' }}
-              />
-            </div>
+    <div className="col-span-12 md:col-span-6 lg:col-span-3 bento-card overflow-hidden group">
+      {/* Dynamic Background Glow */}
+      <div className="absolute inset-0 opacity-20 blur-[60px] saturate-200 pointer-events-none transition-transform duration-700 group-hover:scale-110">
+        <img src={profileImg} alt="" className="w-full h-full object-cover" />
+      </div>
+
+      <div className="relative z-10 p-6 flex flex-col h-full items-center text-center">
+        {/* Large Avatar Section */}
+        <div className="relative mb-6">
+          <div className="absolute inset-0 rounded-full blur-2xl opacity-40 animate-pulse" style={{ background: '#0ea5e9' }} />
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full p-1 bg-white/10 backdrop-blur-md border border-white/20">
+            <img 
+              src={profileImg} 
+              alt="Profile" 
+              className="w-full h-full object-cover rounded-full shadow-2xl"
+            />
             <a 
               href={user?.url || `https://last.fm/user/${storedUsername}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute -bottom-1 -right-1 p-1.5 rounded-lg transition-transform hover:scale-110"
-              style={{
-                background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%)',
-                boxShadow: '0 4px 12px rgba(14, 165, 233, 0.4)'
-              }}
+              className="absolute bottom-1 right-1 p-2 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 text-white hover:scale-110 transition-transform"
             >
-              <ExternalLink className="w-3 h-3" color="#050a0e" />
+              <ExternalLink className="w-4 h-4" />
             </a>
           </div>
-
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold truncate mb-1" style={{ fontFamily: 'var(--font-display)' }}>
-              {user?.real_name || user?.username}
-            </h1>
-            <p className="text-sm font-medium" style={{ color: '#0ea5e9' }}>@{user?.username}</p>
-          </div>
         </div>
 
-        {/* Meta Badges */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        {/* User Info */}
+        <div className="mb-6 space-y-1">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            {user?.real_name || user?.username}
+          </h1>
+          <p className="text-sm font-medium text-cyan-400/80">@{user?.username}</p>
+        </div>
+
+        {/* Minimal Meta Info */}
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
           {user?.country && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{
-              background: 'rgba(14, 165, 233, 0.08)',
-              border: '1px solid rgba(14, 165, 233, 0.12)',
-              color: 'rgba(232, 244, 248, 0.7)'
-            }}>
-              <MapPin className="w-3 h-3" style={{ color: '#0ea5e9' }} /> {user.country}
-            </span>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/40">
+              <MapPin className="w-3 h-3 text-cyan-500/60" /> {user.country}
+            </div>
           )}
           {joinDate && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{
-              background: 'rgba(14, 165, 233, 0.08)',
-              border: '1px solid rgba(14, 165, 233, 0.12)',
-              color: 'rgba(232, 244, 248, 0.7)'
-            }}>
-              <Calendar className="w-3 h-3" style={{ color: '#22d3ee' }} /> {joinDate}
-            </span>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/40">
+              <Calendar className="w-3 h-3 text-cyan-500/60" /> {joinDate}
+            </div>
           )}
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mt-auto">
-          <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(14, 165, 233, 0.04)' }}>
-            <div className="stat-value gradient-text">{formatNumber(user?.playcount || 0)}</div>
-            <div className="text-[10px] font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Scrobbles</div>
-          </div>
-          <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(14, 165, 233, 0.04)' }}>
-            <div className="stat-value gradient-text">{user?.top_artists?.length || 50}</div>
-            <div className="text-[10px] font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Artists</div>
-          </div>
-          <div className="text-center p-3 rounded-xl" style={{ background: 'rgba(14, 165, 233, 0.04)' }}>
-            <div className="stat-value gradient-text">{matchesCount}</div>
-            <div className="text-[10px] font-semibold uppercase tracking-wider mt-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>Matches</div>
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/40">
+            <Disc className="w-3 h-3 text-cyan-500/60" /> {formatNumber(user?.playcount || 0)} Scrobbles
           </div>
         </div>
       </div>

@@ -121,7 +121,7 @@ export function MatchCard({ match, rank }: MatchCardProps) {
       {/* Card Content */}
       <div className="relative z-10 p-5">
         
-        {/* Top Row: Rank + Suggested Badge */}
+        {/* Top Row: Rank */}
         <div className="flex items-center justify-between mb-5">
           <div 
             className="px-3 py-1 rounded-lg text-sm font-bold"
@@ -134,19 +134,6 @@ export function MatchCard({ match, rank }: MatchCardProps) {
           >
             #{rank}
           </div>
-          
-          {isGhost && (
-            <span 
-              className="text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider"
-              style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: 'rgba(255, 255, 255, 0.6)',
-              }}
-            >
-              Suggested
-            </span>
-          )}
         </div>
 
         {/* Main Content: Avatar + Score + Info */}

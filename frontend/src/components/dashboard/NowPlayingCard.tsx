@@ -16,6 +16,7 @@ interface NowPlayingCardProps {
 export function NowPlayingCard({ recentTracks }: NowPlayingCardProps) {
   const nowPlaying = recentTracks.find(t => t.nowplaying);
   const filteredTracks = recentTracks.filter(t => !t.nowplaying).slice(0, 5);
+  const hasNoData = !nowPlaying && filteredTracks.length === 0;
 
   return (
     <div className="col-span-12 md:col-span-6 lg:col-span-6 bento-card p-5 flex flex-col">
@@ -48,7 +49,26 @@ export function NowPlayingCard({ recentTracks }: NowPlayingCardProps) {
 
       {/* Content */}
       <div className="flex-1">
-        {nowPlaying ? (
+        {hasNoData ? (
+          /* Empty State */
+          <div className="flex flex-col items-center justify-center h-full py-8 text-center">
+            <div 
+              className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+              style={{
+                background: 'rgba(14, 165, 233, 0.05)',
+                border: '1px solid rgba(14, 165, 233, 0.1)',
+              }}
+            >
+              <Disc3 className="w-8 h-8" style={{ color: 'rgba(232, 244, 248, 0.2)' }} />
+            </div>
+            <p className="text-sm font-medium mb-1" style={{ color: 'rgba(232, 244, 248, 0.4)' }}>
+              No recent activity
+            </p>
+            <p className="text-xs" style={{ color: 'rgba(232, 244, 248, 0.2)' }}>
+              Start listening to see your tracks here or make them visible in your Last.fm settings.
+            </p>
+          </div>
+        ) : nowPlaying ? (
           /* Now Playing State - Horizontal layout */
           <div className="flex flex-col sm:flex-row gap-4 items-center h-full">
             {/* Album Art - Responsive sizing */}
