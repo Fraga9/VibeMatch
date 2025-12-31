@@ -165,51 +165,87 @@ class EmbeddingService:
     def _load_model_and_embeddings(self):
         """Load precomputed embeddings and build FAISS indexes (OPTIMIZED)"""
         try:
-            # Check if model files exist
-            if not self.embeddings_path.exists():
-                print(f"Warning: Embeddings file not found at {self.embeddings_path}")
-                print("Please run the training notebook first to generate embeddings")
-                # Create dummy embeddings for development
-                self._create_dummy_embeddings()
+            # MEMORY OPTIMIZATION: Try to load pre-built FAISS indexes first
+            # This avoids loading the full embeddings pickle (~500MB) into memory
+            if FAISS_AVAILABLE and self._load_prebuilt_faiss_indexes():
+                # Only load artist embeddings (small, ~5MB) for name lookups
+                # Track lookups will use FAISS index + mappings
+                self._load_artist_embeddings_only()
                 return
 
-            print("🔄 Loading embeddings (optimized with shared memory)...")
-
-            # Check if file is a Git LFS pointer (not actual file)
-            file_size = self.embeddings_path.stat().st_size
-            if file_size < 1000:  # LFS pointers are ~130 bytes
-                print(f"⚠️  Warning: Embeddings file is too small ({file_size} bytes)")
-                print("This looks like a Git LFS pointer file, not the actual embeddings!")
-                print("Git LFS may not have downloaded the file correctly.")
-                print("Creating dummy embeddings for now...")
-                self._create_dummy_embeddings()
-                return
-
-            # Load precomputed embeddings
-            with open(self.embeddings_path, "rb") as f:
-                data = pickle.load(f)
-                self.track_embeddings = data.get("track_embeddings", {})
-                self.artist_embeddings = data.get("artist_embeddings", {})
-
-            # Load mappings (track/artist name -> ID -> embedding)
-            if self.mapping_path.exists():
-                with open(self.mapping_path, "rb") as f:
-                    mappings = pickle.load(f)
-                    self.track_to_id = mappings.get("track_to_id", {})
-                    self.artist_to_id = mappings.get("artist_to_id", {})
-
-            print(f"✅ Loaded {len(self.track_embeddings)} track embeddings")
-            print(f"✅ Loaded {len(self.artist_embeddings)} artist embeddings")
-
-            # Build FAISS indexes for fast similarity search
-            if FAISS_AVAILABLE:
-                self._build_faiss_indexes()
-            else:
-                print("⚠️  FAISS not available - using fallback search (slower)")
+            # Fallback: Load full embeddings (high memory - avoid in production)
+            print("WARNING: Loading full embeddings (high memory usage)")
+            self._load_full_embeddings()
 
         except Exception as e:
-            print(f"❌ Error loading embeddings: {str(e)}")
+            print(f"Error loading embeddings: {str(e)}")
             self._create_dummy_embeddings()
+
+    def _load_artist_embeddings_only(self):
+        """Load only artist embeddings for name lookups (memory efficient)"""
+        print("Loading artist embeddings for name lookups...")
+
+        # Load from dedicated artist file if exists, otherwise extract from main pickle
+        artist_embeddings_path = Path("model/artist_embeddings.pkl")
+
+        if artist_embeddings_path.exists():
+            with open(artist_embeddings_path, "rb") as f:
+                self.artist_embeddings = pickle.load(f)
+        elif self.embeddings_path.exists():
+            # Extract only artist embeddings from main pickle (still loads full file temporarily)
+            # But this is only ~10K artists vs 890K tracks
+            with open(self.embeddings_path, "rb") as f:
+                data = pickle.load(f)
+                self.artist_embeddings = data.get("artist_embeddings", {})
+                # Don't keep track_embeddings - let garbage collector free it
+                del data
+
+        print(f"Loaded {len(self.artist_embeddings)} artist embeddings")
+
+        # Load track-to-artist mappings for fallback lookups
+        if self.mapping_path.exists():
+            with open(self.mapping_path, "rb") as f:
+                mappings = pickle.load(f)
+                self.track_to_id = mappings.get("track_to_id", {})
+                self.artist_to_id = mappings.get("artist_to_id", {})
+
+    def _load_full_embeddings(self):
+        """Load all embeddings (fallback, high memory usage)"""
+        # Check if model files exist
+        if not self.embeddings_path.exists():
+            print(f"Warning: Embeddings file not found at {self.embeddings_path}")
+            self._create_dummy_embeddings()
+            return
+
+        print("Loading embeddings...")
+
+        # Check if file is a Git LFS pointer (not actual file)
+        file_size = self.embeddings_path.stat().st_size
+        if file_size < 1000:  # LFS pointers are ~130 bytes
+            print(f"Warning: Embeddings file is too small ({file_size} bytes)")
+            print("This looks like a Git LFS pointer file, not the actual embeddings!")
+            self._create_dummy_embeddings()
+            return
+
+        # Load precomputed embeddings
+        with open(self.embeddings_path, "rb") as f:
+            data = pickle.load(f)
+            self.track_embeddings = data.get("track_embeddings", {})
+            self.artist_embeddings = data.get("artist_embeddings", {})
+
+        # Load mappings
+        if self.mapping_path.exists():
+            with open(self.mapping_path, "rb") as f:
+                mappings = pickle.load(f)
+                self.track_to_id = mappings.get("track_to_id", {})
+                self.artist_to_id = mappings.get("artist_to_id", {})
+
+        print(f"Loaded {len(self.track_embeddings)} track embeddings")
+        print(f"Loaded {len(self.artist_embeddings)} artist embeddings")
+
+        # Build FAISS indexes
+        if FAISS_AVAILABLE:
+            self._build_faiss_indexes_from_scratch()
 
     def _build_faiss_indexes(self):
         """Load pre-built FAISS indexes or build them if not available"""
@@ -309,15 +345,29 @@ class EmbeddingService:
 
     def get_track_embedding(self, track_name: str, artist_name: str) -> Optional[np.ndarray]:
         """Get embedding for a specific track"""
-        # Try exact match first
         key = f"{self._normalize_name(track_name)}||{self._normalize_name(artist_name)}"
-        if key in self.track_embeddings:
-            return self.track_embeddings[key]
 
-        # Try just track name
-        track_key = self._normalize_name(track_name)
-        if track_key in self.track_embeddings:
-            return self.track_embeddings[track_key]
+        # Method 1: Direct lookup in track_embeddings dict (if loaded)
+        if self.track_embeddings:
+            if key in self.track_embeddings:
+                return self.track_embeddings[key]
+            track_key = self._normalize_name(track_name)
+            if track_key in self.track_embeddings:
+                return self.track_embeddings[track_key]
+
+        # Method 2: Lookup via FAISS index + mappings (memory efficient mode)
+        elif self.track_faiss_index is not None and self.track_id_to_name:
+            # Search for track in mappings
+            try:
+                idx = self.track_id_to_name.index(key)
+                # Reconstruct embedding from FAISS index
+                return self.track_faiss_index.reconstruct(idx)
+            except ValueError:
+                # Try partial match
+                track_key = self._normalize_name(track_name)
+                for idx, name in enumerate(self.track_id_to_name[:50000]):  # Limit search
+                    if track_key in name:
+                        return self.track_faiss_index.reconstruct(idx)
 
         # Fallback to artist embedding
         return self.get_artist_embedding(artist_name)

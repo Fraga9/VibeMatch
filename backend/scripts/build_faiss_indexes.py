@@ -90,9 +90,15 @@ def build_faiss_indexes():
             "artist_id_to_name": artist_id_to_name,
         }, f)
 
+    # Save artist embeddings separately (for memory-efficient loading)
+    artist_embeddings_path = model_dir / "artist_embeddings.pkl"
+    print(f"Saving artist embeddings to {artist_embeddings_path}...")
+    with open(artist_embeddings_path, "wb") as f:
+        pickle.dump(artist_embeddings, f)
+
     # Print file sizes
     print("\nGenerated files:")
-    for path in [track_index_path, artist_index_path, mappings_path]:
+    for path in [track_index_path, artist_index_path, mappings_path, artist_embeddings_path]:
         size_mb = path.stat().st_size / (1024 * 1024)
         print(f"  {path.name}: {size_mb:.1f} MB")
 
