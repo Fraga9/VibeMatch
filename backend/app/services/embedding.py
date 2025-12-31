@@ -473,9 +473,18 @@ class EmbeddingService:
             # Sort by score and cache/return best match
             candidates.sort(key=lambda x: x[1], reverse=True)
             best_idx, best_score, best_name = candidates[0]
-            # Cache the successful match (already cached by name, not embedding)
+            # Cache the successful match
             self.fuzzy_cache[cache_key] = best_name
-            return embeddings_dict[best_name]
+
+            # Get embedding from dict or FAISS index
+            if embeddings_dict and best_name in embeddings_dict:
+                return embeddings_dict[best_name]
+            else:
+                # Memory-efficient mode: reconstruct from FAISS index
+                faiss_index = self.artist_faiss_index if entity_type == 'artist' else self.track_faiss_index
+                if faiss_index is not None:
+                    return faiss_index.reconstruct(best_idx)
+            return None
 
         # Cache negative result with sentinel
         self.fuzzy_cache[cache_key] = "__NOT_FOUND__"
@@ -510,14 +519,24 @@ class EmbeddingService:
         # Try fuzzy matching first with existing embeddings
         embeddings_dict = self.artist_embeddings if item_type == 'artist' else self.track_embeddings
         id_to_name = self.artist_id_to_name if item_type == 'artist' else self.track_id_to_name
+        faiss_index = self.artist_faiss_index if item_type == 'artist' else self.track_faiss_index
         normalized_name = self._normalize_name(item_name)
 
         # Find partial matches (optimized with early exit)
         candidates = []
         normalized_words = set(normalized_name.split())
-        max_checks = min(len(id_to_name if FAISS_AVAILABLE else list(embeddings_dict.keys())), 3000)
 
-        search_list = id_to_name if FAISS_AVAILABLE else list(embeddings_dict.keys())
+        # Use id_to_name list if available (for FAISS mode), otherwise dict keys
+        if id_to_name:
+            search_list = id_to_name
+            max_checks = min(len(search_list), 3000)
+        elif embeddings_dict:
+            search_list = list(embeddings_dict.keys())
+            max_checks = min(len(search_list), 3000)
+        else:
+            # No data available
+            self.fuzzy_cache[cache_key] = "__NOT_FOUND__"
+            return None
 
         for idx in range(max_checks):
             key = search_list[idx]
@@ -525,13 +544,24 @@ class EmbeddingService:
             # Quick substring check first
             if normalized_name in key:
                 score = 0.8 + (len(normalized_name) / len(key)) * 0.2
-                emb = embeddings_dict[key]
+                # Get embedding from dict or FAISS
+                if embeddings_dict and key in embeddings_dict:
+                    emb = embeddings_dict[key]
+                elif faiss_index is not None:
+                    emb = faiss_index.reconstruct(idx)
+                else:
+                    continue
                 candidates.append((emb, score))
                 if score > 0.95 and len(candidates) >= 5:
                     break
             elif key in normalized_name:
                 score = 0.7
-                emb = embeddings_dict[key]
+                if embeddings_dict and key in embeddings_dict:
+                    emb = embeddings_dict[key]
+                elif faiss_index is not None:
+                    emb = faiss_index.reconstruct(idx)
+                else:
+                    continue
                 candidates.append((emb, score))
             else:
                 # Word-level matching
@@ -541,7 +571,12 @@ class EmbeddingService:
                     if overlap > 0:
                         score = overlap / max(len(normalized_words), len(key_words))
                         if score > 0.3:  # Threshold for similarity
-                            emb = embeddings_dict[key]
+                            if embeddings_dict and key in embeddings_dict:
+                                emb = embeddings_dict[key]
+                            elif faiss_index is not None:
+                                emb = faiss_index.reconstruct(idx)
+                            else:
+                                continue
                             candidates.append((emb, score))
 
             # Early exit if we have enough good candidates
