@@ -37,6 +37,7 @@ async def get_top_matches(
         user_id = user_data["user_id"]
         user_embedding = user_data["embedding"]
         user_top_artists = set(user_data.get("top_artists", []))
+        user_top_genres = set(user_data.get("top_genres", []))
 
         # Find similar users
         similar_users = qdrant_service.find_similar_users(
@@ -56,7 +57,16 @@ async def get_top_matches(
         matches = []
         for match in similar_users:
             match_artists = set(match.get("top_artists", []))
+            match_genres = set(match.get("top_genres", []))
+
+            # Calculate shared artists
             shared_artists = list(user_top_artists.intersection(match_artists))
+
+            # Calculate shared genres
+            shared_genres = list(user_top_genres.intersection(match_genres))
+
+            # Calculate "discover" artists - artists the match has that user doesn't
+            discover_artists = list(match_artists - user_top_artists)[:10]
 
             # Calculate compatibility score (0-100)
             # Cosine similarity can be in range [-1, 1], clamp to [0, 1] then scale to 0-100
@@ -69,8 +79,11 @@ async def get_top_matches(
                 username=match.get("username"),
                 similarity=match["similarity"],
                 is_real=match["is_real"],
-                shared_artists=shared_artists[:10],
+                shared_artists=shared_artists[:10],  # Show top 10
+                shared_artists_count=len(shared_artists),  # But report total count
                 shared_tracks=[],  # Could be computed with more detail
+                shared_genres=shared_genres,
+                discover_artists=discover_artists,
                 top_genres=match.get("top_genres", []),
                 profile_image=match.get("profile_image"),
                 country=match.get("country"),

@@ -28,7 +28,10 @@ export interface MatchResult {
   similarity: number;
   is_real: boolean;
   shared_artists: string[];
+  shared_artists_count: number;  // Total count of shared artists (may be > shared_artists.length)
   shared_tracks: Array<{ name: string; artist: string }>;
+  shared_genres: string[];  // Genres both users have in common
+  discover_artists: string[];  // Artists the match has that user doesn't
   top_genres: string[];
   profile_image?: string;
   country?: string;

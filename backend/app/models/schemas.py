@@ -77,7 +77,10 @@ class MatchResult(BaseModel):
     similarity: float
     is_real: bool
     shared_artists: List[str]
+    shared_artists_count: int = 0  # Total count of shared artists
     shared_tracks: List[Dict[str, str]]
+    shared_genres: List[str] = []  # Genres both users have in common
+    discover_artists: List[str] = []  # Artists the match has that user doesn't
     top_genres: List[str] = []
     profile_image: Optional[str] = None
     country: Optional[str] = None

@@ -1,7 +1,7 @@
 'use client';
 
 import type { MatchResult } from '@/types';
-import { MapPin, Music2, ArrowUpRight } from 'lucide-react';
+import { MapPin, Music2, ArrowUpRight, Sparkles } from 'lucide-react';
 
 interface MatchCardProps {
   match: MatchResult;
@@ -80,7 +80,9 @@ export function MatchCard({ match, rank }: MatchCardProps) {
   const cleanUsername = match.username?.replace('lastfm_', '') || 'Anonymous';
   const isGhost = !match.is_real;
   const sharedArtists = match.shared_artists || [];
-  const sharedArtistsCount = sharedArtists.length;
+  const sharedArtistsCount = match.shared_artists_count || sharedArtists.length;
+  const sharedGenres = match.shared_genres || [];
+  const discoverArtists = match.discover_artists || [];
   const topGenres = match.top_genres?.slice(0, 4) || [];
   const hasLocation = match.country && match.country !== 'None' && match.country.trim() !== '';
 
@@ -261,12 +263,75 @@ export function MatchCard({ match, rank }: MatchCardProps) {
           </div>
         )}
 
-        {/* Genres */}
-        {topGenres.length > 0 && (
+        {/* Shared Genres */}
+        {sharedGenres.length > 0 && (
+          <div className="mt-4">
+            <div
+              className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2"
+              style={{ color: 'rgba(148, 163, 184, 0.5)' }}
+            >
+              Shared Genres
+            </div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              {sharedGenres.slice(0, 4).map((genre, idx) => (
+                <span key={idx} className="flex items-center">
+                  <span
+                    className="text-[11px] font-medium"
+                    style={{ color: 'rgba(34, 211, 238, 0.8)' }}
+                  >
+                    {genre.toLowerCase()}
+                  </span>
+                  {idx < Math.min(sharedGenres.length, 4) - 1 && (
+                    <span className="text-[8px] mx-1.5" style={{ color: 'rgba(100, 116, 139, 0.3)' }}>•</span>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Discover Artists */}
+        {discoverArtists.length > 0 && (
+          <div className="mt-4 pt-3" style={{ borderTop: '1px solid rgba(14, 165, 233, 0.08)' }}>
+            <div
+              className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5"
+              style={{ color: 'rgba(148, 163, 184, 0.5)' }}
+            >
+              <Sparkles className="w-3 h-3" style={{ color: 'rgba(250, 204, 21, 0.6)' }} />
+              You might like
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {discoverArtists.slice(0, 3).map((artist, idx) => (
+                <span
+                  key={idx}
+                  className="text-[10px] px-2 py-1 rounded-md font-medium"
+                  style={{
+                    background: 'rgba(250, 204, 21, 0.08)',
+                    border: '1px solid rgba(250, 204, 21, 0.15)',
+                    color: 'rgba(253, 224, 71, 0.9)',
+                  }}
+                >
+                  {artist}
+                </span>
+              ))}
+              {discoverArtists.length > 3 && (
+                <span
+                  className="text-[10px] px-1.5 py-1 font-medium"
+                  style={{ color: 'rgba(148, 163, 184, 0.4)' }}
+                >
+                  +{discoverArtists.length - 3}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Genres (fallback if no shared genres) */}
+        {sharedGenres.length === 0 && topGenres.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1">
             {topGenres.map((genre, idx) => (
               <span key={idx} className="flex items-center">
-                <span 
+                <span
                   className="text-[11px] font-medium"
                   style={{ color: 'rgba(100, 116, 139, 0.7)' }}
                 >

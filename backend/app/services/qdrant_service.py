@@ -110,7 +110,7 @@ class QdrantService:
             payload = {
                 "username": username,
                 "is_real": is_real,
-                "top_artists": top_artists[:10],  # Store top 10
+                "top_artists": top_artists[:30],  # Store top 30 for better shared artists matching
                 "country": country,
                 "profile_image": profile_image,
                 "top_genres": top_genres or [],
