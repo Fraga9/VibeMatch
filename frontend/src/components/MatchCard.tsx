@@ -237,7 +237,7 @@ export function MatchCard({ match, rank }: MatchCardProps) {
               Shared Artists
             </div>
             <div className="flex flex-wrap gap-2">
-              {sharedArtists.slice(0, 4).map((artist, idx) => (
+              {sharedArtists.slice(0, 9).map((artist, idx) => (
                 <span
                   key={idx}
                   className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-300 hover:border-cyan-400/50"
@@ -251,12 +251,12 @@ export function MatchCard({ match, rank }: MatchCardProps) {
                   {artist}
                 </span>
               ))}
-              {sharedArtists.length > 4 && (
-                <span 
+              {sharedArtists.length > 9 && (
+                <span
                   className="text-xs px-2 py-1.5 font-medium"
                   style={{ color: 'rgba(148, 163, 184, 0.5)' }}
                 >
-                  +{sharedArtists.length - 4} more
+                  +{sharedArtists.length - 9} more
                 </span>
               )}
             </div>
@@ -297,29 +297,29 @@ export function MatchCard({ match, rank }: MatchCardProps) {
               className="text-[9px] font-bold uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5"
               style={{ color: 'rgba(148, 163, 184, 0.5)' }}
             >
-              <Sparkles className="w-3 h-3" style={{ color: 'rgba(250, 204, 21, 0.6)' }} />
+              <Sparkles className="w-3 h-3" style={{ color: 'rgba(56, 189, 248, 0.6)' }} />
               You might like
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {discoverArtists.slice(0, 3).map((artist, idx) => (
+              {discoverArtists.slice(0, 6).map((artist, idx) => (
                 <span
                   key={idx}
                   className="text-[10px] px-2 py-1 rounded-md font-medium"
                   style={{
-                    background: 'rgba(250, 204, 21, 0.08)',
-                    border: '1px solid rgba(250, 204, 21, 0.15)',
-                    color: 'rgba(253, 224, 71, 0.9)',
+                    background: 'rgba(56, 189, 248, 0.1)',
+                    border: '1px solid rgba(56, 189, 248, 0.2)',
+                    color: 'rgba(165, 224, 252, 0.95)',
                   }}
                 >
                   {artist}
                 </span>
               ))}
-              {discoverArtists.length > 3 && (
+              {discoverArtists.length > 6 && (
                 <span
                   className="text-[10px] px-1.5 py-1 font-medium"
                   style={{ color: 'rgba(148, 163, 184, 0.4)' }}
                 >
-                  +{discoverArtists.length - 3}
+                  +{discoverArtists.length - 6}
                 </span>
               )}
             </div>
